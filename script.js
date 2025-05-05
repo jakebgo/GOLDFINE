@@ -19,6 +19,8 @@ let scale = 1; // Grid scale
 let targetScale = 1; // Target scale for smooth transitions
 let mouseDistance = 0; // Distance from mouse to center
 let maxDistance = 0; // Maximum distance for scaling
+let lineColors = []; // Array to store line colors
+let colorTransitionSpeed = 0.1; // Speed of color transitions
 
 // Portfolio element variables
 let portfolioElement;
@@ -160,21 +162,23 @@ function drawGrid() {
   // Smooth scale transition
   scale += (targetScale - scale) * 0.1;
   
-  // Set grid style
-  ctx.strokeStyle = 'rgba(240, 240, 240, 0.2)';
-  ctx.lineWidth = 1;
-  
   // Calculate grid dimensions
   const centerX = windowWidth / 2;
   const centerY = windowHeight / 2;
   const gridWidth = Math.ceil(windowWidth / gridSize) * gridSize;
   const gridHeight = Math.ceil(windowHeight / gridSize) * gridSize;
   
+  // Initialize line colors array if needed
+  if (lineColors.length === 0) {
+    const totalLines = (gridWidth * 2 / gridSize + 1) + (gridHeight * 2 / gridSize + 1);
+    lineColors = Array(totalLines).fill('rgba(240, 240, 240, 0.2)');
+  }
+  
+  let lineIndex = 0;
+  
   // Draw horizontal lines
   for (let y = -gridHeight; y <= gridHeight; y += gridSize) {
-    ctx.beginPath();
-    
-    // Calculate perspective
+    // Calculate line position
     const perspectiveScale = perspective / (perspective + y);
     const x1 = centerX - gridWidth * perspectiveScale;
     const x2 = centerX + gridWidth * perspectiveScale;
@@ -187,16 +191,46 @@ function drawGrid() {
     const x2Rot = centerX + (x2 - centerX) * cos * scale - (yPos - centerY) * sin * scale;
     const yRot = centerY + (x1 - centerX) * sin * scale + (yPos - centerY) * cos * scale;
     
+    // Calculate distance from mouse to line
+    const lineLength = Math.sqrt((x2Rot - x1Rot) ** 2 + (yRot - yRot) ** 2);
+    const mouseToLineDistance = Math.abs((mouseY - yRot) * (x2Rot - x1Rot) - (mouseX - x1Rot) * (yRot - yRot)) / lineLength;
+    
+    // Update line color based on mouse proximity
+    const targetColor = mouseToLineDistance < 50 ? 'rgba(255, 255, 255, 0.8)' : 'rgba(240, 240, 240, 0.2)';
+    const currentColor = lineColors[lineIndex];
+    
+    // Smooth color transition
+    const r1 = parseInt(currentColor.slice(5, 8));
+    const g1 = parseInt(currentColor.slice(9, 12));
+    const b1 = parseInt(currentColor.slice(13, 16));
+    const a1 = parseFloat(currentColor.slice(17, 20));
+    
+    const r2 = parseInt(targetColor.slice(5, 8));
+    const g2 = parseInt(targetColor.slice(9, 12));
+    const b2 = parseInt(targetColor.slice(13, 16));
+    const a2 = parseFloat(targetColor.slice(17, 20));
+    
+    const newR = r1 + (r2 - r1) * colorTransitionSpeed;
+    const newG = g1 + (g2 - g1) * colorTransitionSpeed;
+    const newB = b1 + (b2 - b1) * colorTransitionSpeed;
+    const newA = a1 + (a2 - a1) * colorTransitionSpeed;
+    
+    lineColors[lineIndex] = `rgba(${newR}, ${newG}, ${newB}, ${newA})`;
+    
+    // Draw line with current color
+    ctx.beginPath();
+    ctx.strokeStyle = lineColors[lineIndex];
+    ctx.lineWidth = 1;
     ctx.moveTo(x1Rot, yRot);
     ctx.lineTo(x2Rot, yRot);
     ctx.stroke();
+    
+    lineIndex++;
   }
   
   // Draw vertical lines
   for (let x = -gridWidth; x <= gridWidth; x += gridSize) {
-    ctx.beginPath();
-    
-    // Calculate perspective
+    // Calculate line position
     const perspectiveScale = perspective / (perspective + x);
     const y1 = centerY - gridHeight * perspectiveScale;
     const y2 = centerY + gridHeight * perspectiveScale;
@@ -209,9 +243,41 @@ function drawGrid() {
     const y1Rot = centerY + (xPos - centerX) * sin * scale + (y1 - centerY) * cos * scale;
     const y2Rot = centerY + (xPos - centerX) * sin * scale + (y2 - centerY) * cos * scale;
     
+    // Calculate distance from mouse to line
+    const lineLength = Math.sqrt((xRot - xRot) ** 2 + (y2Rot - y1Rot) ** 2);
+    const mouseToLineDistance = Math.abs((mouseY - y1Rot) * (xRot - xRot) - (mouseX - xRot) * (y2Rot - y1Rot)) / lineLength;
+    
+    // Update line color based on mouse proximity
+    const targetColor = mouseToLineDistance < 50 ? 'rgba(255, 255, 255, 0.8)' : 'rgba(240, 240, 240, 0.2)';
+    const currentColor = lineColors[lineIndex];
+    
+    // Smooth color transition
+    const r1 = parseInt(currentColor.slice(5, 8));
+    const g1 = parseInt(currentColor.slice(9, 12));
+    const b1 = parseInt(currentColor.slice(13, 16));
+    const a1 = parseFloat(currentColor.slice(17, 20));
+    
+    const r2 = parseInt(targetColor.slice(5, 8));
+    const g2 = parseInt(targetColor.slice(9, 12));
+    const b2 = parseInt(targetColor.slice(13, 16));
+    const a2 = parseFloat(targetColor.slice(17, 20));
+    
+    const newR = r1 + (r2 - r1) * colorTransitionSpeed;
+    const newG = g1 + (g2 - g1) * colorTransitionSpeed;
+    const newB = b1 + (b2 - b1) * colorTransitionSpeed;
+    const newA = a1 + (a2 - a1) * colorTransitionSpeed;
+    
+    lineColors[lineIndex] = `rgba(${newR}, ${newG}, ${newB}, ${newA})`;
+    
+    // Draw line with current color
+    ctx.beginPath();
+    ctx.strokeStyle = lineColors[lineIndex];
+    ctx.lineWidth = 1;
     ctx.moveTo(xRot, y1Rot);
     ctx.lineTo(xRot, y2Rot);
     ctx.stroke();
+    
+    lineIndex++;
   }
 }
 
