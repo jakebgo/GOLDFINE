@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
 let canvas, ctx;
 let mouseX = 0, mouseY = 0;
 let windowWidth, windowHeight;
+let gridSize = 50; // Size of grid cells
+let perspective = 500; // Perspective depth
+let rotation = 0; // Grid rotation in radians
 
 // Setup canvas
 function setupCanvas() {
@@ -53,6 +56,9 @@ function resizeCanvas() {
 function handleMouseMove(e) {
   mouseX = e.clientX;
   mouseY = e.clientY;
+  
+  // Update rotation based on mouse position
+  rotation = (mouseX - windowWidth / 2) * 0.0001;
 }
 
 // Draw perspective grid
@@ -62,26 +68,57 @@ function drawGrid() {
   // Clear canvas
   ctx.clearRect(0, 0, windowWidth, windowHeight);
   
-  // Draw grid lines
-  // This is a placeholder - will be implemented fully in Task 7
-  ctx.strokeStyle = '#f0f0f0';
+  // Set grid style
+  ctx.strokeStyle = 'rgba(240, 240, 240, 0.2)';
   ctx.lineWidth = 1;
   
-  // Draw horizontal lines (placeholder)
-  for (let i = 0; i < 10; i++) {
-    const y = windowHeight * (i / 10);
+  // Calculate grid dimensions
+  const centerX = windowWidth / 2;
+  const centerY = windowHeight / 2;
+  const gridWidth = Math.ceil(windowWidth / gridSize) * gridSize;
+  const gridHeight = Math.ceil(windowHeight / gridSize) * gridSize;
+  
+  // Draw horizontal lines
+  for (let y = -gridHeight; y <= gridHeight; y += gridSize) {
     ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(windowWidth, y);
+    
+    // Calculate perspective
+    const scale = perspective / (perspective + y);
+    const x1 = centerX - gridWidth * scale;
+    const x2 = centerX + gridWidth * scale;
+    const yPos = centerY + y * scale;
+    
+    // Apply rotation
+    const cos = Math.cos(rotation);
+    const sin = Math.sin(rotation);
+    const x1Rot = centerX + (x1 - centerX) * cos - (yPos - centerY) * sin;
+    const x2Rot = centerX + (x2 - centerX) * cos - (yPos - centerY) * sin;
+    const yRot = centerY + (x1 - centerX) * sin + (yPos - centerY) * cos;
+    
+    ctx.moveTo(x1Rot, yRot);
+    ctx.lineTo(x2Rot, yRot);
     ctx.stroke();
   }
   
-  // Draw vertical lines (placeholder)
-  for (let i = 0; i < 10; i++) {
-    const x = windowWidth * (i / 10);
+  // Draw vertical lines
+  for (let x = -gridWidth; x <= gridWidth; x += gridSize) {
     ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, windowHeight);
+    
+    // Calculate perspective
+    const scale = perspective / (perspective + x);
+    const y1 = centerY - gridHeight * scale;
+    const y2 = centerY + gridHeight * scale;
+    const xPos = centerX + x * scale;
+    
+    // Apply rotation
+    const cos = Math.cos(rotation);
+    const sin = Math.sin(rotation);
+    const xRot = centerX + (xPos - centerX) * cos - (y1 - centerY) * sin;
+    const y1Rot = centerY + (xPos - centerX) * sin + (y1 - centerY) * cos;
+    const y2Rot = centerY + (xPos - centerX) * sin + (y2 - centerY) * cos;
+    
+    ctx.moveTo(xRot, y1Rot);
+    ctx.lineTo(xRot, y2Rot);
     ctx.stroke();
   }
 }
