@@ -94,23 +94,48 @@ function animate() {
 
 // Setup modal handlers
 function setupModalHandlers() {
-  const portfolioContainer = document.querySelector('.portfolio-container');
+  const portfolioElement = document.querySelector('.portfolio-element');
   const modalOverlay = document.querySelector('.modal-overlay');
   const modalClose = document.querySelector('.modal-close');
+  const projectTitle = document.querySelector('.project-title');
+  const projectDescription = document.querySelector('.project-description');
   
-  // These are placeholders - will be implemented fully in Task 12
-  if (portfolioContainer) {
-    portfolioContainer.addEventListener('click', () => {
-      // Show modal (will be implemented in Task 12)
+  // Portfolio element click handler
+  if (portfolioElement) {
+    portfolioElement.addEventListener('click', () => {
+      if (modalOverlay) {
+        // Populate with placeholder data
+        if (projectTitle) projectTitle.textContent = 'Featured Project Title';
+        if (projectDescription) projectDescription.textContent = 'This is a description of the featured project. It will be replaced with actual content in Task 12.';
+        
+        // Show modal
+        modalOverlay.style.display = 'flex';
+      }
     });
   }
   
+  // Modal close button
   if (modalClose) {
     modalClose.addEventListener('click', () => {
-      // Hide modal (will be implemented in Task 12)
       if (modalOverlay) {
         modalOverlay.style.display = 'none';
       }
     });
   }
+  
+  // Close on background click
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        modalOverlay.style.display = 'none';
+      }
+    });
+  }
+  
+  // Close on ESC key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalOverlay) {
+      modalOverlay.style.display = 'none';
+    }
+  });
 } 

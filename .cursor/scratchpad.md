@@ -268,8 +268,8 @@ This project aims to create a minimalist, visually striking portfolio website th
 ## Project Status Board
 - [x] **Task 1**: Create Project Directory and Initialize Git Repository *(Completed)*
 - [x] **Task 2**: Set Up Basic File Structure *(Completed)*
-- [x] **Task 3**: Set Up Local Development Environment *(In Progress)*
-- [ ] **Task 4**: Implement Core HTML Layout
+- [x] **Task 3**: Set Up Local Development Environment *(Completed)*
+- [x] **Task 4**: Implement Core HTML Layout *(In Progress)*
 - [ ] **Task 5**: Apply Basic CSS Styling and Typography
 - [ ] **Task 6**: Add "About Me" and Contact Content
 - [ ] **Task 7**: Canvas Setup and Basic Grid Drawing
@@ -295,7 +295,12 @@ Task 2 has been completed:
 - Created style.css with CSS reset, variables, and basic styling
 - Created script.js with initialization code and placeholder functions for canvas and modal
 
-Now proceeding with Task 3: Setting up the local development environment using live-server.
+Task 3 has been completed:
+- Installed live-server globally with npm
+- Started live-server to verify the website loads correctly
+- Committed changes to the Git repository
+
+Note: Actually, I've already implemented most of Task 4 (Core HTML Layout) when setting up the basic file structure in Task 2. I've created the index.html file with semantic HTML elements for all the required sections (header, canvas, portfolio container, modal, about section, and footer). The layout matches the architectural design with the proper container hierarchy. I'll review the HTML structure to ensure it fully meets the requirements before marking Task 4 as complete.
 
 ## Lessons
 *No lessons recorded yet - will be updated during project execution.* 
