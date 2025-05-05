@@ -104,6 +104,86 @@ header h1 {
   padding: var(--spacing-lg);
 }
 
+/* Portfolio Element */
+.portfolio-element {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: var(--spacing-lg);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  max-width: 400px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  backdrop-filter: blur(5px);
+  position: relative;
+  overflow: hidden;
+}
+
+.portfolio-element::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, rgba(0, 102, 255, 0.1), rgba(0, 102, 255, 0.05));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.portfolio-element:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.portfolio-element:hover::before {
+  opacity: 1;
+}
+
+.portfolio-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+  transition: transform 0.3s ease;
+}
+
+.portfolio-element:hover .portfolio-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.portfolio-element h3 {
+  margin-bottom: var(--spacing-md);
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  position: relative;
+}
+
+.portfolio-preview {
+  color: var(--secondary-color);
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  margin-bottom: var(--spacing-md);
+}
+
+.portfolio-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.tag {
+  background-color: rgba(0, 102, 255, 0.1);
+  color: var(--accent-color);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.portfolio-element:hover .tag {
+  background-color: rgba(0, 102, 255, 0.2);
+}
+
 /* About Section */
 .about-section {
   padding: var(--spacing-lg);
@@ -200,34 +280,6 @@ header h1 {
   max-width: 100%;
   height: auto;
   border-radius: 4px;
-}
-
-/* Portfolio Element */
-.portfolio-element {
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: var(--spacing-lg);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  max-width: 400px;
-  text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  backdrop-filter: blur(5px);
-}
-
-.portfolio-element:hover {
-  transform: scale(1.05);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-.portfolio-element h3 {
-  margin-bottom: var(--spacing-md);
-  font-size: clamp(1.25rem, 3vw, 1.5rem);
-}
-
-.portfolio-preview {
-  color: var(--secondary-color);
-  font-size: clamp(0.875rem, 2vw, 1rem);
 }
 
 /* Responsive Design */
