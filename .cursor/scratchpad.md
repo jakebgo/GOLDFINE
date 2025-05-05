@@ -266,9 +266,9 @@ This project aims to create a minimalist, visually striking portfolio website th
     - *Success Criteria*: Website is accessible online at the chosen URL with all functionality working correctly
 
 ## Project Status Board
-- [x] **Task 1**: Create Project Directory and Initialize Git Repository *(In Progress)*
-- [ ] **Task 2**: Set Up Basic File Structure
-- [ ] **Task 3**: Set Up Local Development Environment
+- [x] **Task 1**: Create Project Directory and Initialize Git Repository *(Completed)*
+- [x] **Task 2**: Set Up Basic File Structure *(Completed)*
+- [x] **Task 3**: Set Up Local Development Environment *(In Progress)*
 - [ ] **Task 4**: Implement Core HTML Layout
 - [ ] **Task 5**: Apply Basic CSS Styling and Typography
 - [ ] **Task 6**: Add "About Me" and Contact Content
@@ -283,7 +283,19 @@ This project aims to create a minimalist, visually striking portfolio website th
 - [ ] **Task 15**: Deployment
 
 ## Executor's Feedback or Assistance Requests
-I'm beginning implementation with Task 1. I see we should use the existing GitHub repository at https://github.com/jakebgo/portfolio instead of creating a new one. I'll clone this repository and set it up as specified in the plan.
+Task 1 has been completed:
+- Created .gitignore file with the recommended patterns
+- Initialized Git repository
+- Connected to the remote GitHub repository at https://github.com/jakebgo/portfolio
+- Made initial commit with all current files
+
+Task 2 has been completed:
+- Created the directory structure with assets/images, assets/fonts, and assets/videos folders
+- Created index.html with HTML5 boilerplate and basic semantic structure
+- Created style.css with CSS reset, variables, and basic styling
+- Created script.js with initialization code and placeholder functions for canvas and modal
+
+Now proceeding with Task 3: Setting up the local development environment using live-server.
 
 ## Lessons
 *No lessons recorded yet - will be updated during project execution.* 
