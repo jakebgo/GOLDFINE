@@ -5,6 +5,7 @@ console.log('Script loaded successfully');
 document.addEventListener('DOMContentLoaded', () => {
   setupCanvas();
   setupModalHandlers();
+  setupFloatingEffect();
 });
 
 // Canvas variables
@@ -18,6 +19,15 @@ let scale = 1; // Grid scale
 let targetScale = 1; // Target scale for smooth transitions
 let mouseDistance = 0; // Distance from mouse to center
 let maxDistance = 0; // Maximum distance for scaling
+
+// Portfolio element variables
+let portfolioElement;
+let floatX = 0;
+let floatY = 0;
+let targetX = 0;
+let targetY = 0;
+let floatSpeed = 0.05;
+let floatRadius = 20;
 
 // Setup canvas
 function setupCanvas() {
@@ -47,6 +57,34 @@ function setupCanvas() {
   
   // Start animation loop
   animate();
+}
+
+// Setup floating effect
+function setupFloatingEffect() {
+  portfolioElement = document.querySelector('.portfolio-element');
+  if (!portfolioElement) return;
+  
+  // Start floating animation
+  animateFloat();
+}
+
+// Animate floating effect
+function animateFloat() {
+  if (!portfolioElement) return;
+  
+  // Update target position
+  targetX = Math.sin(Date.now() * 0.001) * floatRadius;
+  targetY = Math.cos(Date.now() * 0.002) * floatRadius;
+  
+  // Smooth movement
+  floatX += (targetX - floatX) * floatSpeed;
+  floatY += (targetY - floatY) * floatSpeed;
+  
+  // Apply transform
+  portfolioElement.style.transform = `translate(${floatX}px, ${floatY}px) scale(1.05)`;
+  
+  // Continue animation
+  requestAnimationFrame(animateFloat);
 }
 
 // Resize canvas to fill window
@@ -91,6 +129,25 @@ function handleMouseMove(e) {
   
   // Update scale based on distance
   targetScale = 1 + (mouseDistance / maxDistance) * 0.2;
+  
+  // Update floating effect based on mouse position
+  if (portfolioElement) {
+    const elementRect = portfolioElement.getBoundingClientRect();
+    const elementCenterX = elementRect.left + elementRect.width / 2;
+    const elementCenterY = elementRect.top + elementRect.height / 2;
+    
+    const mouseDx = mouseX - elementCenterX;
+    const mouseDy = mouseY - elementCenterY;
+    const mouseDist = Math.sqrt(mouseDx * mouseDx + mouseDy * mouseDy);
+    
+    if (mouseDist < 200) {
+      floatRadius = 30;
+      floatSpeed = 0.1;
+    } else {
+      floatRadius = 20;
+      floatSpeed = 0.05;
+    }
+  }
 }
 
 // Draw perspective grid
