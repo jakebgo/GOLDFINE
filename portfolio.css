@@ -178,4 +178,61 @@ nav a {
 main {
   max-width: 1400px;
   margin: 0 auto;
+}
+
+/* Mobile-first tweaks for small screens */
+@media (max-width: 768px) {
+  /* Collapse body padding */
+  body {
+    padding: 1rem;
+  }
+
+  /* Stack project info and media */
+  .highlight-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .highlight-container > .project-info,
+  .highlight-container > .project-media {
+    flex: none;
+    width: 100%;
+  }
+
+  /* Center and full-width media */
+  .project-media {
+    text-align: center;
+    margin-top: 2rem;
+  }
+  .project-media img {
+    width: 100%;
+    height: auto;
+    margin-top: 0;
+  }
+
+  /* Fluid typography */
+  h2.builds-title {
+    font-size: clamp(1.25rem, 5vw, 1.5rem);
+  }
+  h2.ideate-title {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+  .projects-highlight p {
+    font-size: clamp(0.9rem, 3.5vw, 1rem);
+  }
+
+  /* Touch-friendly footer links */
+  .portfolio-footer a {
+    padding: 0.75rem;
+    margin: 0 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Simplify card visuals on very small phones */
+  .project-media img {
+    box-shadow: none;
+    backdrop-filter: none;
+  }
 } 
