@@ -21,10 +21,16 @@ let mouseDistance = 0; // Distance from mouse to center
 let maxDistance = 0; // Maximum distance for scaling
 let lineColors = []; // Array to store line colors
 let colorTransitionSpeed = 0.1; // Speed of color transitions
-let zRotation = (27 * Math.PI) / 180; // 27 degrees in radians
+let zRotation = (35 * Math.PI) / 180; // 35 degrees in radians
 let xRotation = (-8 * Math.PI) / 180; // -8 degrees in radians
 let minRotation = -Math.PI / 4; // -45 degrees
 let maxRotation = Math.PI / 4; // 45 degrees
+// Camera offset variables for centering the view
+let cameraOffsetX = 94; // Locked X offset
+let cameraOffsetY = 0; // Locked Y offset
+let cameraZ = 1073; // Locked zoom level
+let minZoom = 400;
+let maxZoom = 2000;
 
 // Portfolio element variables
 let portfolioElement;
@@ -37,16 +43,18 @@ let floatRadius = 20;
 
 // Highlight trail state
 const highlightTrail = []; // {x, y, colorIndex, timestamp}
-const highlightDuration = 750; // ms
+const highlightFadeDuration = 1000; // ms - Each highlight fades after 1 second
 const highlightColors = [
-  'rgba(0,255,255,1)',   // Vibrant Cyan
-  'rgba(255,0,255,1)',  // Vibrant Magenta
-  'rgba(255,255,0,1)',  // Vibrant Yellow
-  'rgba(0,255,128,1)'   // Vibrant Lime
+  'rgba(0,255,255,0.85)',   // Neon Cyan
+  'rgba(255,0,255,0.85)',   // Neon Magenta
+  'rgba(0,255,128,0.85)',   // Neon Green
+  'rgba(255,255,0,0.85)',   // Neon Yellow
+  'rgba(128,0,255,0.85)',   // Neon Purple
+  'rgba(255,128,0,0.85)',   // Neon Orange
 ];
 let colorCycleIndex = 0;
 let lastColorCycleTime = Date.now();
-const colorCycleInterval = 125; // ms
+const colorCycleInterval = 200; // ms
 
 // Add these variables at the top with other canvas variables
 let isDragging = false;
@@ -54,6 +62,13 @@ let currentLetter = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
 let letterPositions = {};
+
+// Function to update CSS variables for camera offsets
+function updateCameraOffsetCSSVars() {
+  document.documentElement.style.setProperty('--camera-offset-x', `${cameraOffsetX}px`);
+  document.documentElement.style.setProperty('--camera-offset-y', `${cameraOffsetY}px`);
+  drawGrid(); // Redraw grid with new offsets
+}
 
 // Create per-letter position controls
 function createLetterPositionControls() {
@@ -130,6 +145,7 @@ function createRotationControl() {
   controlDiv.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
   controlDiv.style.fontFamily = 'Arial, sans-serif';
   controlDiv.style.fontSize = '14px';
+  controlDiv.style.display = 'none'; // Hide the control panel
   
   // Z-axis rotation control
   const zLabel = document.createElement('label');
@@ -176,6 +192,72 @@ function createRotationControl() {
   xValueDisplay.style.marginLeft = '10px';
   xValueDisplay.style.fontWeight = 'bold';
   
+  // Camera X Offset control
+  const panXSlider = document.createElement('input');
+  panXSlider.type = 'range';
+  panXSlider.min = '-500';
+  panXSlider.max = '500';
+  panXSlider.value = String(cameraOffsetX); // Use current value
+  panXSlider.style.width = '200px';
+  panXSlider.style.height = '20px';
+  panXSlider.style.cursor = 'pointer';
+  
+  const panXLabel = document.createElement('label');
+  panXLabel.textContent = 'Camera X Offset: ';
+  panXLabel.style.display = 'block';
+  panXLabel.style.marginTop = '15px';
+  panXLabel.style.marginBottom = '8px';
+  panXLabel.style.fontWeight = 'bold';
+  
+  const panXValueDisplay = document.createElement('span');
+  panXValueDisplay.textContent = `${cameraOffsetX}px`;
+  panXValueDisplay.style.marginLeft = '10px';
+  panXValueDisplay.style.fontWeight = 'bold';
+  
+  // Camera Y Offset control
+  const panYSlider = document.createElement('input');
+  panYSlider.type = 'range';
+  panYSlider.min = '-500';
+  panYSlider.max = '500';
+  panYSlider.value = String(cameraOffsetY); // Use current value
+  panYSlider.style.width = '200px';
+  panYSlider.style.height = '20px';
+  panYSlider.style.cursor = 'pointer';
+  
+  const panYLabel = document.createElement('label');
+  panYLabel.textContent = 'Camera Y Offset: ';
+  panYLabel.style.display = 'block';
+  panYLabel.style.marginTop = '15px';
+  panYLabel.style.marginBottom = '8px';
+  panYLabel.style.fontWeight = 'bold';
+  
+  const panYValueDisplay = document.createElement('span');
+  panYValueDisplay.textContent = `${cameraOffsetY}px`;
+  panYValueDisplay.style.marginLeft = '10px';
+  panYValueDisplay.style.fontWeight = 'bold';
+  
+  // Add Zoom control
+  const zoomLabel = document.createElement('label');
+  zoomLabel.textContent = 'Camera Zoom: ';
+  zoomLabel.style.display = 'block';
+  zoomLabel.style.marginTop = '15px';
+  zoomLabel.style.marginBottom = '8px';
+  zoomLabel.style.fontWeight = 'bold';
+  
+  const zoomSlider = document.createElement('input');
+  zoomSlider.type = 'range';
+  zoomSlider.min = minZoom;
+  zoomSlider.max = maxZoom;
+  zoomSlider.value = String(cameraZ);
+  zoomSlider.style.width = '200px';
+  zoomSlider.style.height = '20px';
+  zoomSlider.style.cursor = 'pointer';
+  
+  const zoomValueDisplay = document.createElement('span');
+  zoomValueDisplay.textContent = `${cameraZ}px`;
+  zoomValueDisplay.style.marginLeft = '10px';
+  zoomValueDisplay.style.fontWeight = 'bold';
+
   // Event listeners
   zSlider.addEventListener('input', (e) => {
     const degrees = parseInt(e.target.value);
@@ -189,9 +271,28 @@ function createRotationControl() {
     xValueDisplay.textContent = `${degrees}°`;
   });
   
+  // Event listeners for camera offsets
+  panXSlider.addEventListener('input', (e) => {
+    cameraOffsetX = parseInt(e.target.value);
+    panXValueDisplay.textContent = `${cameraOffsetX}px`;
+    updateCameraOffsetCSSVars();
+  });
+  
+  panYSlider.addEventListener('input', (e) => {
+    cameraOffsetY = parseInt(e.target.value);
+    panYValueDisplay.textContent = `${cameraOffsetY}px`;
+    updateCameraOffsetCSSVars();
+  });
+  
+  // Add zoom event listener
+  zoomSlider.addEventListener('input', (e) => {
+    cameraZ = parseInt(e.target.value);
+    zoomValueDisplay.textContent = `${cameraZ}px`;
+  });
+  
   // Reset button
   const resetButton = document.createElement('button');
-  resetButton.textContent = 'Reset All';
+  resetButton.textContent = 'Reset Grid Angles';
   resetButton.style.marginTop = '15px';
   resetButton.style.padding = '5px 10px';
   resetButton.style.border = '1px solid #ccc';
@@ -206,6 +307,7 @@ function createRotationControl() {
     xRotation = (-8 * Math.PI) / 180;
     zValueDisplay.textContent = '27°';
     xValueDisplay.textContent = '-8°';
+    // Don't reset camera offsets, keep them as they are
   });
   
   // Add all elements to control div
@@ -215,11 +317,27 @@ function createRotationControl() {
   controlDiv.appendChild(xLabel);
   controlDiv.appendChild(xSlider);
   controlDiv.appendChild(xValueDisplay);
+  controlDiv.appendChild(panXLabel);
+  controlDiv.appendChild(panXSlider);
+  controlDiv.appendChild(panXValueDisplay);
+  controlDiv.appendChild(panYLabel);
+  controlDiv.appendChild(panYSlider);
+  controlDiv.appendChild(panYValueDisplay);
+  controlDiv.appendChild(zoomLabel);
+  controlDiv.appendChild(zoomSlider);
+  controlDiv.appendChild(zoomValueDisplay);
   controlDiv.appendChild(document.createElement('br'));
   controlDiv.appendChild(resetButton);
   
   document.body.appendChild(controlDiv);
-  console.log('Rotation controls created and added to DOM');
+  
+  console.log('Rotation controls created and added to DOM (hidden)');
+  
+  // Auto-center the letters once and lock the position
+  setTimeout(() => {
+    // Just call updateCameraOffsetCSSVars to make sure the current values are applied
+    updateCameraOffsetCSSVars();
+  }, 500);
 }
 
 // Add rotateZ function
@@ -268,6 +386,11 @@ function resizeCanvas() {
   // Update max distance for scaling
   maxDistance = Math.sqrt(windowWidth * windowWidth + windowHeight * windowHeight) / 2;
   
+  // Update CSS variables if function exists
+  if (typeof updateCameraOffsetCSSVars === 'function') {
+    updateCameraOffsetCSSVars();
+  }
+  
   drawGrid();
 }
 
@@ -287,25 +410,37 @@ function handleMouseMove(e) {
   mouseX = e.clientX;
   mouseY = e.clientY;
 
-  // Determine which grid cell the mouse is in
-  const cellX = Math.floor(mouseX / gridSize);
-  const cellY = Math.floor(mouseY / gridSize);
-
-  // Only add a new highlight if this cell isn't already the most recent
-  const last = highlightTrail[highlightTrail.length - 1];
-  if (!last || last.x !== cellX || last.y !== cellY) {
-    highlightTrail.push({
-      x: cellX,
-      y: cellY,
-      colorIndex: colorCycleIndex,
-      timestamp: Date.now()
-    });
+  // Transform mouse coordinates to grid space
+  const margin = 20;
+  const cols = Math.ceil(windowWidth / gridSize) + margin * 2 + 2;
+  const rows = Math.ceil(windowHeight / gridSize) + margin * 2 + 2;
+  const cellX = Math.floor((mouseX - windowWidth / 2) / gridSize + cols / 2);
+  const cellY = Math.floor((mouseY - windowHeight / 2) / gridSize + rows / 2);
+  
+  // Add highlight for current cell - ALWAYS add one
+  highlightTrail.push({
+    x: cellX,
+    y: cellY,
+    colorIndex: colorCycleIndex,
+    timestamp: Date.now(),
+    size: 2.0 // Much larger size for better visibility
+  });
+  
+  // Ensure trail doesn't get too long
+  while (highlightTrail.length > 20) {
+    highlightTrail.shift();
   }
+  
+  // Force redraw
+  drawGrid();
 }
 
 // Draw static grid with cell highlights and trail
 function drawGrid() {
-  if (!ctx) return;
+  if (!ctx) {
+    console.error('Canvas context not found');
+    return;
+  }
   ctx.clearRect(0, 0, windowWidth, windowHeight);
 
   // --- 3D Perspective Grid Parameters ---
@@ -319,7 +454,6 @@ function drawGrid() {
   const aspect = windowWidth / windowHeight;
   const near = 0.1;
   const far = 1000;
-  const cameraZ = 800; // Camera distance from grid
   const cameraY = 0;
   const cameraX = 0;
   // Center grid origin so it extends well beyond all edges
@@ -333,9 +467,9 @@ function drawGrid() {
     const f = 1 / Math.tan(fov / 2);
     const px = f * (cx / aspect) / -cz;
     const py = f * (cy) / -cz;
-    // Shift projection center: right by 0.33*width, up by 0.25*height
-    const centerX = windowWidth * 0.83;
-    const centerY = windowHeight * 0.25;
+    // Center projection in the middle of the canvas
+    const centerX = windowWidth / 2 + cameraOffsetX;
+    const centerY = windowHeight / 2 + cameraOffsetY;
     return [centerX + px * windowWidth / 2, centerY + py * windowHeight / 2];
   }
 
@@ -405,30 +539,73 @@ function drawGrid() {
 
   // --- Highlight trail (projected) ---
   const now = Date.now();
-  for (let idx = highlightTrail.length - 1; idx >= 0; idx--) {
-    const {x, y, colorIndex, timestamp} = highlightTrail[idx];
+
+  // Calculate number of valid highlights before removing expired ones
+  let validHighlights = 0;
+  for (let idx = 0; idx < highlightTrail.length; idx++) {
+    const { timestamp } = highlightTrail[idx];
     const age = now - timestamp;
-    if (age > highlightDuration) {
+    if (age <= highlightFadeDuration) validHighlights++;
+  }
+
+  // Draw highlights as filled squares that fill the grid cell
+  for (let idx = 0; idx < highlightTrail.length; idx++) {
+    const {x, y, colorIndex, timestamp, size = 2.0} = highlightTrail[idx];
+    const age = now - timestamp;
+    if (age > highlightFadeDuration) {
       highlightTrail.splice(idx, 1);
+      idx--;
       continue;
     }
-    const fade = 1 - age / highlightDuration;
+    // Ease-out cubic fade for the whole duration
+    const t = Math.min(age / highlightFadeDuration, 1);
+    const fade = 1 - Math.pow(t, 3);
+
     ctx.save();
     ctx.globalAlpha = fade;
     ctx.fillStyle = highlightColors[colorIndex];
-    // Project highlight cell center
-    let vx = gridOrigin[0] + x * cellSize + cellSize/2;
-    let vy = gridOrigin[1] + y * cellSize + cellSize/2;
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    // Project highlight cell corners
+    let vx = gridOrigin[0] + x * cellSize;
+    let vy = gridOrigin[1] + y * cellSize;
     let vz = 0;
-    [vx, vy, vz] = rotateZ([vx, vy, vz], zRotation);
-    [vx, vy, vz] = rotateX([vx, vy, vz], theta + xRotation);
-    const [sx, sy] = project([vx, vy, vz]);
-    // Approximate cell size in screen space (not perfect, but close)
-    let [sx2, sy2] = project([vx + cellSize, vy + cellSize, vz]);
-    const w = Math.abs(sx2 - sx);
-    const h = Math.abs(sy2 - sy);
-    ctx.fillRect(sx - w/2, sy - h/2, w, h);
+    // Project all four corners of the cell
+    let corners = [
+      [vx, vy, vz],
+      [vx + cellSize, vy, vz],
+      [vx + cellSize, vy + cellSize, vz],
+      [vx, vy + cellSize, vz]
+    ].map(corner => {
+      let [cx, cy, cz] = rotateZ(corner, zRotation);
+      [cx, cy, cz] = rotateX([cx, cy, cz], theta + xRotation);
+      return project([cx, cy, cz]);
+    });
+    // Draw filled polygon (square)
+    ctx.beginPath();
+    ctx.moveTo(corners[0][0], corners[0][1]);
+    for (let i = 1; i < corners.length; i++) {
+      ctx.lineTo(corners[i][0], corners[i][1]);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
     ctx.restore();
+  }
+
+  // Helper function to draw rounded rectangles
+  function roundRect(ctx, x, y, width, height, radius) {
+    if (radius > width/2) radius = width/2;
+    if (radius > height/2) radius = height/2;
+    
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + width, y, x + width, y + height, radius);
+    ctx.arcTo(x + width, y + height, x, y + height, radius);
+    ctx.arcTo(x, y + height, x, y, radius);
+    ctx.arcTo(x, y, x + width, y, radius);
+    ctx.closePath();
+    ctx.fill();
   }
 
   // --- Intersection dots (projected) ---
