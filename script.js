@@ -14,18 +14,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Setup image hover controls
   const hoverImage = document.querySelector('.portfolio-preview-image');
-  const staticImageSrc = 'assets/videos/ideate-static.png'; // Corrected path
-  const animatedGifSrc = 'assets/videos/ideate.gif';    // Make sure this path is correct
+  const staticImageSrc = 'assets/videos/ideate-static.png';
+  const animatedGifSrc = 'assets/videos/ideate.gif';
+
+  const pngXOffset = 2.5;   // Locked X offset for the PNG
+  const gifXOffset = 15.5;  // Locked X offset for the GIF
 
   if (hoverImage && portfolioElement) {
-    hoverImage.src = staticImageSrc; // Set initial state
+    // Set initial PNG image and its object-position
+    hoverImage.src = staticImageSrc;
+    hoverImage.style.objectPosition = `calc(50% + ${pngXOffset}px) 50%`;
 
     portfolioElement.addEventListener('mouseenter', () => {
       hoverImage.src = animatedGifSrc;
+      hoverImage.style.objectPosition = `calc(50% + ${gifXOffset}px) 50%`; // Apply fixed GIF offset
     });
     
     portfolioElement.addEventListener('mouseleave', () => {
       hoverImage.src = staticImageSrc;
+      hoverImage.style.objectPosition = `calc(50% + ${pngXOffset}px) 50%`; // Apply fixed PNG offset
     });
   }
 

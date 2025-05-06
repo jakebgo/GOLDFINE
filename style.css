@@ -231,7 +231,7 @@ header h1 {
   cursor: pointer;
   max-width: 400px;
   width: 100%;
-  aspect-ratio: 16/9;
+  aspect-ratio: 1/1;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
   position: relative;
@@ -254,7 +254,7 @@ header h1 {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 16px;
+  /* object-position will be controlled by JS */
   pointer-events: none;
   filter: grayscale(100%);
   transition: filter 0.5s ease-in-out;
@@ -264,6 +264,7 @@ header h1 {
   filter: grayscale(0%) contrast(120%);
 }
 
+/*
 .portfolio-icon {
   font-size: 3rem;
   margin-bottom: var(--spacing-md);
@@ -273,6 +274,7 @@ header h1 {
 .portfolio-element:hover .portfolio-icon {
   transform: scale(1.2) rotate(5deg);
 }
+*/
 
 .portfolio-element h3 {
   font-size: 1.5rem;
@@ -491,6 +493,35 @@ header h1 {
     font-size: clamp(0.875rem, 2vw, 1rem);
   }
 }
+
+/* Developer Controls Slider */
+.dev-controls {
+  position: fixed;
+  bottom: 70px; /* Adjust as needed to be above other elements */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(250, 250, 250, 0.95);
+  padding: 12px 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
+}
+
+.dev-controls input[type="range"] {
+  cursor: pointer;
+}
+
+/*
+.dev-controls label {
+  font-weight: bold;
+}
+*/
 
 /* Print Styles */
 @media print {
