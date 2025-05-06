@@ -222,6 +222,29 @@ header h1 {
   transform-style: preserve-3d;
 }
 
+/* Hide main portfolio container on mobile */
+@media (max-width: 768px) {
+  .portfolio-container {
+    overflow-x: scroll;
+    position: relative;
+    height: auto;
+  }
+  .portfolio-container .portfolio-element {
+    margin-top: 0;
+    width: auto;
+    max-width: none;
+    aspect-ratio: auto;
+  }
+  /* Move portfolio-link into contact-nav on mobile */
+  .contact-nav {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .contact-nav .portfolio-link {
+    display: inline-flex;
+  }
+}
+
 /* Portfolio Element */
 .portfolio-element {
   background-color: rgba(255, 255, 255, 0.95);
@@ -409,6 +432,27 @@ header h1 {
 .contact-nav a[href*="mailto"]:hover {
   color: #EA4335;
   background: #fff;
+}
+
+.contact-nav .portfolio-link {
+  display: none;
+  color: #000;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-size: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
+}
+
+.contact-nav .portfolio-link:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Modal Styles */
@@ -603,5 +647,12 @@ header h1 {
   
   .portfolio-element {
     break-inside: avoid;
+  }
+}
+
+/* Override to show portfolio-link on small screens */
+@media (max-width: 768px) {
+  .contact-nav .portfolio-link {
+    display: inline-flex !important;
   }
 } 
