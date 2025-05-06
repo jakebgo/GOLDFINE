@@ -3,9 +3,37 @@ console.log('Script loaded successfully');
 
 // Canvas setup
 document.addEventListener('DOMContentLoaded', () => {
+  // Get portfolio element first and set its position immediately
+  portfolioElement = document.querySelector('.portfolio-element');
+  if (portfolioElement) {
+    // Set initial position with no transitions
+    portfolioElement.style.transition = 'none';
+    portfolioElement.style.transform = 'none';
+    updatePortfolioPosition();
+  }
+
+  // Setup image hover controls
+  const hoverImage = document.querySelector('.portfolio-preview-image');
+  const staticImageSrc = 'assets/videos/ideate-static.png'; // Corrected path
+  const animatedGifSrc = 'assets/videos/ideate.gif';    // Make sure this path is correct
+
+  if (hoverImage && portfolioElement) {
+    hoverImage.src = staticImageSrc; // Set initial state
+
+    portfolioElement.addEventListener('mouseenter', () => {
+      hoverImage.src = animatedGifSrc;
+    });
+    
+    portfolioElement.addEventListener('mouseleave', () => {
+      hoverImage.src = staticImageSrc;
+    });
+  }
+
+  // Then set up other components
   setupCanvas();
   setupModalHandlers();
   setupFloatingEffect();
+  createPortfolioPositionControls();
 });
 
 // Canvas variables
@@ -41,6 +69,15 @@ let targetY = 0;
 let floatSpeed = 0.05;
 let floatRadius = 20;
 
+// Add portfolio position control variables
+let portfolioX = 327;
+let portfolioY = -231;
+let portfolioZ = 61;
+let portfolioTilt = 37;
+let portfolioRotate = 36;
+let portfolioSize = 0.6;
+let isManuallyControlled = true; // Lock the position by default
+
 // Highlight trail state
 const highlightTrail = []; // {x, y, colorIndex, timestamp}
 const highlightFadeDuration = 1000; // ms - Each highlight fades after 1 second
@@ -62,6 +99,22 @@ let currentLetter = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
 let letterPositions = {};
+
+// Project data structure
+const projectData = {
+  title: "Creative Builder Portfolio",
+  description: "A minimalist, interactive portfolio website showcasing the balance between technical execution and creative vision. Built with vanilla JavaScript and CSS, featuring a dynamic 3D grid background and smooth animations.",
+  thumbnailUrl: "assets/images/portfolio-thumbnail.jpg",
+  videoUrl: "assets/videos/portfolio-demo.mp4",
+  tags: ["Web Design", "Development", "Interactive", "3D", "Animation"],
+  technologies: ["JavaScript", "CSS3", "HTML5", "Canvas API"],
+  features: [
+    "Dynamic 3D grid background with mouse interaction",
+    "Smooth animations and transitions",
+    "Responsive design for all screen sizes",
+    "Minimalist aesthetic with focus on typography"
+  ]
+};
 
 // Function to update CSS variables for camera offsets
 function updateCameraOffsetCSSVars() {
@@ -349,30 +402,63 @@ function rotateZ([x, y, z], angle) {
 
 // Setup floating effect
 function setupFloatingEffect() {
-  portfolioElement = document.querySelector('.portfolio-element');
-  if (!portfolioElement) return;
-  
-  // Start floating animation
-  animateFloat();
-}
+  if (!portfolioElement) {
+    console.error('Portfolio element not found in DOM');
+    return;
+  }
 
-// Animate floating effect
-function animateFloat() {
-  if (!portfolioElement) return;
+  // Ensure position is locked and no transitions
+  portfolioElement.style.transition = 'none';
+  portfolioElement.style.transform = 'none';
+  updatePortfolioPosition();
+
+  // Check if motion is available and has the animate method
+  if (typeof motion === 'undefined' || typeof motion.animate !== 'function') {
+    console.error('Motion library not properly loaded or missing animate method');
+    return;
+  }
   
-  // Update target position
-  targetX = Math.sin(Date.now() * 0.001) * floatRadius;
-  targetY = Math.cos(Date.now() * 0.002) * floatRadius;
-  
-  // Smooth movement
-  floatX += (targetX - floatX) * floatSpeed;
-  floatY += (targetY - floatY) * floatSpeed;
-  
-  // Apply transform
-  portfolioElement.style.transform = `translate(${floatX}px, ${floatY}px) scale(1.05)`;
-  
-  // Continue animation
-  requestAnimationFrame(animateFloat);
+  // Add mouse move effect
+  document.addEventListener('mousemove', (e) => {
+    if (isManuallyControlled) return; // Skip if manually controlled
+    
+    const { clientX, clientY } = e;
+    const { innerWidth, innerHeight } = window;
+    
+    // Calculate mouse position relative to center of screen
+    const mouseX = (clientX - innerWidth / 2) / (innerWidth / 2);
+    const mouseY = (clientY - innerHeight / 2) / (innerHeight / 2);
+    
+    // Apply subtle movement based on mouse position
+    motion.animate(
+      portfolioElement,
+      {
+        x: mouseX * 20,
+        y: mouseY * 20,
+      },
+      {
+        duration: 0.5,
+        ease: "easeOut",
+      }
+    );
+  });
+
+  // Reset position when mouse leaves
+  document.addEventListener('mouseleave', () => {
+    if (isManuallyControlled) return; // Skip if manually controlled
+    
+    motion.animate(
+      portfolioElement,
+      {
+        x: 0,
+        y: 0,
+      },
+      {
+        duration: 0.5,
+        ease: "easeOut",
+      }
+    );
+  });
 }
 
 // Resize canvas to fill window
@@ -641,20 +727,68 @@ function animate() {
 function setupModalHandlers() {
   const portfolioElement = document.querySelector('.portfolio-element');
   const modalOverlay = document.querySelector('.modal-overlay');
+  const modalContent = document.querySelector('.modal-content');
   const modalClose = document.querySelector('.modal-close');
   const projectTitle = document.querySelector('.project-title');
   const projectDescription = document.querySelector('.project-description');
+  const projectThumbnail = document.querySelector('.project-thumbnail');
+  const projectVideo = document.querySelector('.project-video');
+  const projectTags = document.querySelectorAll('.project-tags');
+  const projectFeaturesList = document.querySelector('.project-features ul');
   
   // Portfolio element click handler
   if (portfolioElement) {
     portfolioElement.addEventListener('click', () => {
       if (modalOverlay) {
-        // Populate with placeholder data
-        if (projectTitle) projectTitle.textContent = 'Featured Project Title';
-        if (projectDescription) projectDescription.textContent = 'This is a description of the featured project. It will be replaced with actual content in Task 12.';
+        // Populate with project data
+        if (projectTitle) projectTitle.textContent = projectData.title;
+        if (projectDescription) projectDescription.textContent = projectData.description;
+        if (projectThumbnail) {
+          projectThumbnail.src = projectData.thumbnailUrl;
+          projectThumbnail.alt = projectData.title;
+        }
+        if (projectVideo) {
+          projectVideo.src = projectData.videoUrl;
+          projectVideo.load();
+        }
         
-        // Show modal
+        // Populate tags
+        projectTags.forEach(tagsContainer => {
+          tagsContainer.innerHTML = '';
+          const tags = tagsContainer.parentElement.classList.contains('project-technologies') 
+            ? projectData.technologies 
+            : projectData.tags;
+          
+          tags.forEach(tag => {
+            const tagElement = document.createElement('span');
+            tagElement.className = 'tag';
+            tagElement.textContent = tag;
+            tagsContainer.appendChild(tagElement);
+          });
+        });
+        
+        // Populate features
+        if (projectFeaturesList) {
+          projectFeaturesList.innerHTML = '';
+          projectData.features.forEach(feature => {
+            const li = document.createElement('li');
+            li.textContent = feature;
+            projectFeaturesList.appendChild(li);
+          });
+        }
+        
+        // Show modal with animation
         modalOverlay.style.display = 'flex';
+        modalOverlay.style.opacity = '0';
+        modalContent.style.transform = 'scale(0.9)';
+        
+        // Trigger animation
+        requestAnimationFrame(() => {
+          modalOverlay.style.transition = 'opacity 0.3s ease';
+          modalContent.style.transition = 'transform 0.3s ease';
+          modalOverlay.style.opacity = '1';
+          modalContent.style.transform = 'scale(1)';
+        });
       }
     });
   }
@@ -662,9 +796,7 @@ function setupModalHandlers() {
   // Modal close button
   if (modalClose) {
     modalClose.addEventListener('click', () => {
-      if (modalOverlay) {
-        modalOverlay.style.display = 'none';
-      }
+      closeModal(modalOverlay, modalContent);
     });
   }
   
@@ -672,7 +804,7 @@ function setupModalHandlers() {
   if (modalOverlay) {
     modalOverlay.addEventListener('click', (e) => {
       if (e.target === modalOverlay) {
-        modalOverlay.style.display = 'none';
+        closeModal(modalOverlay, modalContent);
       }
     });
   }
@@ -680,9 +812,23 @@ function setupModalHandlers() {
   // Close on ESC key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modalOverlay) {
-      modalOverlay.style.display = 'none';
+      closeModal(modalOverlay, modalContent);
     }
   });
+}
+
+// Helper function to close modal with animation
+function closeModal(modalOverlay, modalContent) {
+  if (!modalOverlay || !modalContent) return;
+  
+  modalOverlay.style.opacity = '0';
+  modalContent.style.transform = 'scale(0.9)';
+  
+  setTimeout(() => {
+    modalOverlay.style.display = 'none';
+    modalOverlay.style.opacity = '1';
+    modalContent.style.transform = 'scale(1)';
+  }, 300);
 }
 
 // Add this function after the existing functions
@@ -699,87 +845,85 @@ function setupLetterDrag() {
       y: rect.top - titleRect.top
     };
     
-    // Add event listeners
-    letter.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      currentLetter = letter;
-      const rect = letter.getBoundingClientRect();
-      const titleRect = landingTitle.getBoundingClientRect();
-      // Calculate offset from the center of the letter
-      dragOffsetX = e.clientX - rect.left;
-      dragOffsetY = e.clientY - rect.top;
-      letter.style.cursor = 'grabbing';
-      letter.style.zIndex = '1000';
-      
-      // Switch to absolute positioning during drag
-      letter.style.position = 'absolute';
-      letter.style.transform = 'scale(1.4)';
-      letter.style.left = `${rect.left}px`;
-      letter.style.top = `${rect.top}px`;
-    });
-    
-    letter.addEventListener('mouseup', () => {
-      if (!isDragging) return;
-      
-      isDragging = false;
-      currentLetter = null;
-      letter.style.cursor = 'grab';
-      letter.style.zIndex = '10';
-      
-      // Get final position
-      const rect = letter.getBoundingClientRect();
-      const titleRect = landingTitle.getBoundingClientRect();
-      const x = rect.left - titleRect.left;
-      const y = rect.top - titleRect.top;
-      
-      // Store new position
-      letterPositions[index] = { x, y };
-      
-      // Switch back to transform-based positioning
-      letter.style.position = 'relative';
-      letter.style.left = 'auto';
-      letter.style.top = 'auto';
-      letter.style.transform = `perspective(2000px) rotateX(60deg) rotateZ(19deg) scale(1.2) translate(${x}px, ${y}px)`;
-    });
-    
-    letter.addEventListener('mouseleave', () => {
-      if (!isDragging) return;
-      
-      isDragging = false;
-      currentLetter = null;
-      letter.style.cursor = 'grab';
-      letter.style.zIndex = '10';
-      
-      // Get final position
-      const rect = letter.getBoundingClientRect();
-      const titleRect = landingTitle.getBoundingClientRect();
-      const x = rect.left - titleRect.left;
-      const y = rect.top - titleRect.top;
-      
-      // Store new position
-      letterPositions[index] = { x, y };
-      
-      // Switch back to transform-based positioning
-      letter.style.position = 'relative';
-      letter.style.left = 'auto';
-      letter.style.top = 'auto';
-      letter.style.transform = `perspective(2000px) rotateX(60deg) rotateZ(19deg) scale(1.2) translate(${x}px, ${y}px)`;
-    });
-    
-    // Set initial cursor style
-    letter.style.cursor = 'grab';
+    // Remove cursor styles and pointer events
+    letter.style.cursor = 'default';
+    letter.style.pointerEvents = 'none';
   });
+}
+
+// Create portfolio position controls
+function createPortfolioPositionControls() {
+  const controlsContainer = document.createElement('div');
+  controlsContainer.className = 'dev-controls';
+  controlsContainer.style.position = 'fixed';
+  controlsContainer.style.bottom = '20px';
+  controlsContainer.style.right = '20px';
+  controlsContainer.style.zIndex = '1000';
+  controlsContainer.style.background = 'rgba(255, 255, 255, 0.9)';
+  controlsContainer.style.padding = '10px';
+  controlsContainer.style.borderRadius = '8px';
+  controlsContainer.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+  controlsContainer.style.display = 'none'; // Hide the controls since position is locked
+
+  const controls = [
+    { name: 'X', value: portfolioX, min: -500, max: 500, step: 1 },
+    { name: 'Y', value: portfolioY, min: -500, max: 500, step: 1 },
+    { name: 'Z', value: portfolioZ, min: -500, max: 500, step: 1 },
+    { name: 'Tilt', value: portfolioTilt, min: -90, max: 90, step: 1 },
+    { name: 'Rotate', value: portfolioRotate, min: -90, max: 90, step: 1 },
+    { name: 'Size', value: portfolioSize, min: 0.1, max: 5, step: 0.1 }
+  ];
+
+  controls.forEach(control => {
+    const controlGroup = document.createElement('div');
+    controlGroup.style.marginBottom = '8px';
+
+    const label = document.createElement('label');
+    label.textContent = `Portfolio ${control.name}: `;
+    label.style.display = 'block';
+    label.style.marginBottom = '4px';
+
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.min = control.min;
+    input.max = control.max;
+    input.step = control.step;
+    input.value = control.value;
+    input.style.width = '150px';
+    input.disabled = true; // Disable the controls since position is locked
+
+    const valueDisplay = document.createElement('span');
+    valueDisplay.textContent = control.value;
+    valueDisplay.style.marginLeft = '8px';
+
+    controlGroup.appendChild(label);
+    controlGroup.appendChild(input);
+    controlGroup.appendChild(valueDisplay);
+    controlsContainer.appendChild(controlGroup);
+  });
+
+  document.body.appendChild(controlsContainer);
+}
+
+// Update portfolio position based on control values
+function updatePortfolioPosition() {
+  if (!portfolioElement) return;
   
-  // Add mousemove listener to document
-  document.addEventListener('mousemove', (e) => {
-    if (isDragging && currentLetter) {
-      // Calculate new position
-      const x = e.clientX - dragOffsetX;
-      const y = e.clientY - dragOffsetY;
-      
-      // Update position
-      currentLetter.style.left = `${x}px`;
-      currentLetter.style.top = `${y}px`;
-    }
-  });
+  isManuallyControlled = true; // Set manual control flag
+  
+  // Set transform origin to center
+  portfolioElement.style.transformOrigin = 'center center';
+  
+  // Apply transforms in the correct order: translate -> rotate -> scale
+  const transform = `
+    translate3d(${portfolioX}px, ${portfolioY}px, ${portfolioZ}px)
+    rotate3d(1, 0, 0, ${portfolioTilt}deg)
+    rotate3d(0, 0, 1, ${portfolioRotate}deg)
+    scale(${portfolioSize})
+  `;
+  
+  portfolioElement.style.transform = transform;
+  
+  // Update the element's z-index based on Z position to maintain proper stacking
+  portfolioElement.style.zIndex = Math.floor(4 + (portfolioZ / 10));
 } 

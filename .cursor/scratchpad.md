@@ -1,401 +1,215 @@
-# Creative Builder Portfolio Website Project Plan
+# Creative Builder Portfolio Website – Comprehensive Build Plan
 
-## Background and Motivation
-This project aims to create a minimalist, visually striking portfolio website that effectively demonstrates the combination of creative vision and technical execution. The goal is to establish a personal brand as a "Creative Builder" - someone who balances technical and creative skills. The website itself will serve as the primary demonstration of this duality, showcasing technical skill through interactive elements while maintaining a strong aesthetic derived from minimalist principles, inspired by sites like rauno.me.
+---
 
-## Key Challenges and Analysis
-1. **Technical-Creative Balance**: The core challenge is creating a website that effectively demonstrates both technical proficiency and creative design sensibilities. This requires careful implementation of interactive elements that are both visually appealing and technically impressive.
+## Background & Motivation
+This project creates a minimalist, visually striking portfolio that proves the author's dual identity as a **"Creative Builder"**—equally fluent in design and code. Inspired by sites such as **rauno.me**, the page itself becomes the portfolio: a performant Canvas‑driven depth‑of‑field grid, bold typographic landing word ("GOLDFINE"), and an interactive 3‑D project showcase.
 
-2. **Performance**: The interactive elements, particularly the Canvas-based background, must maintain high performance (60+ fps) to create a smooth user experience.
+---
 
-3. **Minimalist Design vs Functionality**: Balancing the minimalist aesthetic with sufficient functionality and content to effectively communicate the portfolio information.
+## Key Challenges & Analysis
+1.  **Technical/Creative Balance** – delivering code‑heavy interactions without compromising a spare aesthetic.
+2.  **Performance** – Canvas & Motion animations must stay at 60 fps on mid‑range GPUs.
+3.  **Minimalism vs. Content** – enough narrative to sell the work without visual clutter.
+4.  **Complex 3‑D Transforms** – grid, letters, and modal must share a believable space.
+5.  **Cross‑Browser Parity** – Chrome, Firefox, Safari, Edge (latest) on macOS/Windows.
+6.  **Camera Panning** – allow dev‑time pivot tweaks while keeping letters/grid aligned.
+7.  **Performance Budget (General Guideline):**
+    *   Target < 5 ms JavaScript execution time per frame for animations.
+    *   Aim for a total JavaScript bundle size < 2 MB.
+    *   Core Web Vitals: Target LCP (Largest Contentful Paint) ≤ 2.5s, CLS (Cumulative Layout Shift) < 0.1, INP (Interaction to Next Paint) ≤ 200ms (aim for ≤ 125ms if possible).
+    *   For a pure-canvas hero element, ensure LCP is accurately measured by making the `<canvas>` element `content-visibility: visible` and ensuring it receives its first paint quickly. Non-critical canvas updates, if deferred (e.g., via `requestIdleCallback` or `scheduler.postTask` with `priority: 'background'`), must not interfere with this initial LCP measurement.
+8.  **Task Dependencies:** Be mindful of task dependencies outlined. For complex epics, ensure prerequisite tasks are completed before starting dependent ones. (A Mermaid diagram in `docs/dependencies.mmd` has been stubbed and is highly recommended to visually map these dependencies as complexity grows.)
+9.  **Semantic HTML:** Ensure correct semantic heading levels (e.g., main landing "GOLDFINE" as `<h1>`, modal titles as `<h2>`) for SEO and accessibility. Subsequent sections should follow logical heading progression (e.g., `<h3>` for an "About" section if it follows the main `<h1>` content, `<h4>` for subsections within that, etc.) to maintain a valid document outline.
+10. **CSS Performance:**
+    *   Consider using `contain: content` on elements like the modal and portfolio card containers to isolate their paint, layout, and size calculations, potentially improving rendering performance.
+    *   For elements like the floating portfolio card (Epic 3), consider applying `will-change: transform` only during active interaction states (e.g., `:hover`, `:active`, or via JavaScript on `mouseenter`/`mouseleave`) rather than continuously. This can help manage compositor layer memory more effectively.
 
-4. **Technical Implementation**: Implementing the interactive background with Canvas API and the floating portfolio element with Motion One library requires careful planning and execution.
+---
 
-5. **Browser Compatibility**: Ensuring the website functions correctly across major desktop browsers (Chrome, Firefox, Safari, Edge) while maintaining performance.
+## Depth‑of‑Field Landing Page (Rauno‑style)
 
-6. **Camera Panning**: adjusting the view pivot to center letters and grid simultaneously while preserving their relative transforms
+| Task              | Summary                                                              | Success Criteria                         |
+|-------------------|----------------------------------------------------------------------|------------------------------------------|
+| Separate Layers   | Grid Canvas & "GOLDFINE" live on separate stacking contexts          | Distinct depth planes                    |
+| 3‑D Transform     | Perspective & slight rotate/blur on grid; counter‑transform on text  | Clear recession & crisp text             |
+| Camera Offsets    | `--camera-offset-x/y` CSS vars + JS sliders (dev only)               | Unified panning that retains alignment   |
+| Responsive        | Fluid CSS, rem‑based spacing, media queries                          | Identical feel from 360 px → 2560 px     |
+| Optional Parallax | Mouse parallax with throttle                                         | Adds depth without perf hit              |
 
-## Depth of Field Landing Page Effect (Rauno.me Style)
+---
 
-### Background and Motivation
-Create a visually striking landing page where the grid and the main text ("GOLDFINE") appear to exist in a 3D space, with a sense of depth and separation, inspired by rauno.me.
+## High‑Level Task Breakdown
+*Careful attention should be paid to task dependencies, especially within Epic 4. Some tasks, like populating the modal (14.4), depend on prior data setup (14.1-14.3).*
 
-### Key Challenges and Analysis
-- Layer separation for independent manipulation
-- Subtle 3D transforms and/or blur for the grid
-- Text remains crisp and visually "in front"
-- Responsive and performant
-- Camera Panning Complexity: aligning coordinate spaces between canvas projection and CSS-transformed text; ensuring group translation does not override individual letter transforms; preserving performance and responsiveness
+### **Epic 0 – Initial Setup**
+-   Initialise Git, `.gitignore`, basic `index.html / style.css / script.js` scaffolding.
+-   Configure live‑server or Vite for hot‑reload.
 
-### High-level Task Breakdown
-1. Ensure grid (canvas) and text are on separate DOM layers (z-index)
-2. Apply CSS 3D transform (perspective, rotateX/Y, translate) and optional blur to the grid canvas
-3. Keep text sharp, apply text-shadow and optional opposing transform
-4. Fine-tune grid opacity, blur, and color for visual recession
-5. Fine-tune text color and shadow for legibility and pop
-6. Test responsiveness and visual effect on all viewport sizes
-7. (Optional) Add mouse parallax for extra depth
-8. Declare and initialize `let cameraOffsetX = 0`, `cameraOffsetY = 0` in `script.js` to represent the view pivot.
-9. Abstract out projection center in the `project` helper: compute `centerX = (windowWidth * 0.83) + cameraOffsetX`, `centerY = (windowHeight * 0.25) + cameraOffsetY`.
-10. Expose CSS variables `--camera-offset-x`, `--camera-offset-y` on `:root` in `style.css`, default to `0px`.
-11. Update `.landing-title` transform in `style.css` to prepend `translate3d(var(--camera-offset-x), var(--camera-offset-y), 0)` before existing perspective and rotation transforms.
-12. In `script.js`, after any cameraOffset change (e.g. window resize or UI input), call `document.documentElement.style.setProperty('--camera-offset-x', `${cameraOffsetX}px`)` and similarly for Y.
-13. Add two range slider UI controls labeled "Pan X" and "Pan Y" in the existing control panel, bound to `cameraOffsetX` and `cameraOffsetY`, with reasonable ranges (e.g. ±50% of viewport) and live-update logic.
-14. Compute initial offsets automatically: measure `.landing-title` bounding box and center it within the viewport by setting `cameraOffsetX` and `cameraOffsetY` accordingly.
-15. Test default centering and verify that dragging the sliders pans grid and text together, maintaining relative letter positions.
+### **Epic 1 – Core Layout & Content**
+1.  Semantic HTML5 skeleton (`header`, `canvas`, main sections). Ensure "GOLDFINE" is `<h1>`.
+2.  CSS variables, reset, Flex/Grid layout.
+3.  About‑me blurb & bottom‑center contact links.
+4.  Dev‑only sliders for individual letter X/Y/Z.
+5.  **Content Asset Optimization:**
+    *   Implement image optimization (e.g., AVIF/WEBP formats with fallbacks, `loading="lazy"`, `decode="async"` attributes for `<img>` tags).
+    *   For critical first-viewport hero images (if any), consider using `<link rel="preload" as="image">` to improve Largest Contentful Paint (LCP) time (target LCP < 2.5s).
 
-### Success Criteria
-- Grid and text appear on different planes, with clear depth
-- Grid is visually behind, possibly blurred/faded
-- Text is crisp, sharp, and visually in front
-- Effect is visually similar to the reference screenshot and works responsively
-- Default view centers the group of letters over the grid; panning sliders shift both grid and letters uniformly without breaking relative transforms
+### **Epic 2 – Interactive Background**
+1.  Full‑viewport Canvas + resize handler.
+2.  Perspective grid with mouse‑proximity line highlight.
+3.  Camera panning offsets integrated into both Canvas projection & CSS text transforms.
 
-## High-level Task Breakdown
+### **Epic 3 – Featured Portfolio Card**
+1.  Single floating project element: subtle Motion One parallax fallback to CSS (self‑hosted if CDN flaky). (Note: If Motion One CDN issues persist, consider fallback to `https://unpkg.com/@motionone/dom` and pin to an exact version.)
+2.  Hover scale + shadow; z‑index above grid/text.
 
-### Epic 0: Initial Project Set Up and Structure
-1. **Create Project Directory and Initialize Git Repository**
-   - Create new directory named `creative-builder-portfolio`
-   - Initialize Git repository using `git init`
-   - Create .gitignore file with the following entries:
-     ```
-     # Dependencies
-     /node_modules
+### **Epic 4 – Modal Detail View**
 
-     # Logs
-     *.log
-     npm-debug.log*
-     yarn-debug.log*
-     yarn-error.log*
-     lerna-debug.log*
+> **User story** – "As a visitor, I click a project card and get an immersive, accessible 3‑D modal with video, description, and a link to the source."
 
-     # Editor directories and files
-     .vscode
-     .idea
-     *.swp
-     *.swo
+#### 13 ▸ Accessible Modal Shell
+| Step | Action                                                        | Definition of Done                                      |
+|------|---------------------------------------------------------------|---------------------------------------------------------|
+| 13.1 | Inject `<div id="modal" role="dialog" aria-modal="true">` near `</body>`. Modal title should be `<h2>`. (Note: If using the native `<dialog>` element, consider a polyfill for older Safari versions like v15 and below.) | Hidden by default; no console errors                    |
+| 13.2 | Add focus‑trap sentinels & ARIA labels                        | Tabbing cycles inside modal; focus returns to triggering card on close. |
+| 13.3 | Base CSS: fixed inset 0, with a default semi-opaque background (fallback). /* CSS Comment: Fallback applied first, then @supports enhances. */ | Fade‑in/out ≤ 300 ms. Use an `@supports (backdrop-filter: blur(4px))` block to progressively enhance with `backdrop-filter: blur(4px)` if supported, ensuring the fallback does not also apply. (In the actual stylesheet, place a CSS comment directly above the fallback/enhancement blocks explaining this logic to prevent future double paints by maintainers). |
+| 13.4 | Close via ESC & overlay‑click                                 | Works keyboard & mouse              |
 
-     # OS generated files
-     .DS_Store
-     Thumbs.db
-     ```
-   - Make initial commit: `git add . && git commit -m "feat: Initial project setup and boilerplate"`
-   - *Success Criteria*: Repository initialized with basic structure and .gitignore properly configured
+#### 14 ▸ Dynamic Content Wiring
+| Step | Action                                                  | DoD                                 |
+|------|---------------------------------------------------------|-------------------------------------|
+| 14.1 | Move project meta to `/data/projects.json`              | JSON validated, lints               |
+| 14.2 | Lazy‑load data once                                     | Single network request              |
+| 14.3 | Add `data-project` attr to each `.portfolio-element`    | Attr present & unique               |
+| 14.4 | `showProjectDetails(id)` populates modal                | Correct title, desc, media (videos should include `playsinline` and `muted` attributes) |
+| 14.5 | Preload video on card `mouseenter`                      | No loading spinner on open          |
+| 14.6 | Persist last‑opened id in `sessionStorage` (opt)        | Refresh with `#id` reopens. Guard against stale IDs if project data changes (e.g., `if(!projects[id]) sessionStorage.removeItem('lastOpenedProjectId')`). |
 
-2. **Set Up Basic File Structure**
-   - Create `index.html` with HTML5 boilerplate, including:
-     - Proper doctype, charset (UTF-8), viewport meta tag
-     - Title tag with "GOLDFINE | Creative Builder" or similar
-     - Links to CSS with proper rel attributes
-     - Script tag for JavaScript with defer attribute
-   - Create `style.css` with CSS reset/normalize and CSS Variables for consistent styling (colors, fonts, spacing)
-   - Create `script.js` with initialization code and console log to verify loading
-   - Create directory structure:
-     ```
-     /creative-builder-portfolio
-     ├── index.html
-     ├── style.css
-     ├── script.js
-     ├── /assets
-     │   ├── /images
-     │   ├── /fonts
-     │   └── /videos
-     └── .gitignore
-     ```
-   - *Success Criteria*: Files created with appropriate starter content and proper linking, following the structure defined in architecture.md
+#### 15 ▸ 3‑D Depth Integration
+| Step | Action                                                        | DoD                                      |
+|------|---------------------------------------------------------------|------------------------------------------|
+| 15.1 | `--modal-z:1500px` in `:root` (letters ~1000 px)              | **[COMPLETED]** Variable declared in `style.css` with a comment. |
+| 15.2 | `.modal__inner` uses unified transform incl. grid tilt vars   | Modal sits "in front" of text            |
+| 15.3 | Animate translateZ/opacity on open (Motion One or CSS)        | Pop‑forward < 0.5 s, > 55 fps. Include `@media (prefers-reduced-motion: reduce)` CSS fallback. In JavaScript, if `window.matchMedia('(prefers-reduced-motion: reduce)').matches` is true, skip `requestAnimationFrame` for this animation AND skip applying any related `will-change` CSS hints. |
 
-3. **Set Up Local Development Environment**
-   - Install live-server globally: `npm install -g live-server`
-   - Start server in project directory: `live-server`
-   - Verify setup by loading page locally and checking console for JavaScript loading message
-   - Test that CSS is correctly applied by adding a simple style rule
-   - *Success Criteria*: Website loads locally with no errors in console, CSS applies correctly
+#### 16 ▸ Shared Transform Origin & Camera Offsets
+| Step | Action                                                              | DoD                                      |
+|------|---------------------------------------------------------------------|------------------------------------------|
+| 16.1 | Read `--camera-offset-x/y` via JS                                   | Values logged OK                         |
+| 16.2 | Compute percent‑based `transform-origin` so modal emanates from vanishing point | Visual continuity during pan. Cache final pixel values and only recalculate on a 200ms debounced resize event to avoid sub-pixel jumps (especially on pinch-zoom). |
+| 16.3 | Throttled resize recalculates origin                                | No jitter                                |
 
-### Epic 1: Core Layout & Content
-4. **Implement Core HTML Layout**
-   - Add semantic HTML5 elements for main sections:
-     - `<header>` for the landing section with "GOLDFINE" text
-     - `<canvas>` element for the interactive background with appropriate id/class
-     - `<section>` or `<div>` for the portfolio element container
-     - `<div>` for the project detail modal (initially hidden)
-     - `<section>` for the "About Me" content
-     - `<footer>` or `<nav>` for contact links and navigation
-   - Create containers for interactive elements with appropriate id/class attributes
-   - Use clear, semantic class naming (following kebab-case per architecture.md)
-   - *Success Criteria*: HTML structure matches the architectural design with semantic elements and proper container hierarchy
+#### 17 ▸ Visual Polish & Brand Cohesion
+*Typography* `var(--heading-font)` weight 600 • *Colours* rgba background 0.85 opacity • *Shadow* layered inset+drop • *Motion* 50 ms child stagger • *CTA* "View Code ↗︎" optional.
+**DoD** – Modal matches landing style, respects system dark/light (via `prefers-color-scheme` media query and corresponding theme tokens), no mismatched hues. Perform colour contrast check for modal background/text, especially in dark mode, to ensure WCAG AA compliance.
 
-5. **Apply Basic CSS Styling and Typography**
-   - Implement CSS variables for consistent styling:
-     ```css
-     :root {
-       /* Colors */
-       --primary-color: #...;
-       --secondary-color: #...;
-       --background-color: #...;
-       --text-color: #...;
-       
-       /* Typography */
-       --heading-font: '...', sans-serif;
-       --body-font: '...', sans-serif;
-       
-       /* Spacing */
-       --spacing-sm: ...px;
-       --spacing-md: ...px;
-       --spacing-lg: ...px;
-     }
-     ```
-   - Set up typography for the main "GOLDFINE" text (large, bold, visually striking)
-   - Apply base styles using Flexbox/Grid for layout
-   - Position elements according to design (navigation/contact fixed to bottom-center per architecture.md)
-   - Style the main content sections for proper visual hierarchy
-   - *Success Criteria*: Page displays with proper layout and typography, matching minimalist aesthetic
+#### 18 ▸ Responsiveness & A11y QA
+| Viewport   | Checks                                                              |
+|------------|---------------------------------------------------------------------|
+| ≤ 480 px   | Modal full‑bleed, video collapses behind "Play demo" accordion      |
+| 481‑1023 px| One‑column layout; touch keyboard safe                              |
+| ≥ 1024 px  | 3‑D transforms intact on desktop                                    |
 
-6. **Add "About Me" and Contact Content**
-   - Add brief "About Me" summary text conveying the "creative builder" brand identity
-   - Add contact links:
-     - Email link using `mailto:` protocol
-     - X/Twitter link using direct URL
-   - Style content appropriately using the CSS variables defined in task 5
-   - Position the navigation/contact fixed to the bottom-center of the viewport per architecture.md
-   - *Success Criteria*: About section and contact links are visible, properly styled, and functional (links work when clicked)
+*Keyboard path* trapped; *Screen reader* announces dialog; *Perf* main‑thread block < 16 ms.
 
-7. **Add interactive sliders for each letter (J, A, C, O, B) to control their X, Y, and Z positions in real time**
+**Acceptance Checklist**
+- [ ] Card click opens correct modal.
+- [ ] Depth & offsets seamless with grid/letters.
+- [ ] Full keyboard & screen‑reader support.
+- [ ] Responsive from min-width 320px to max-width 3840px.
+- [ ] FPS never < 55 on open/close animation.
 
-### Epic 2: Interactive Background Implementation
-8. **Canvas Setup and Basic Grid Drawing**
-   - Set up canvas element to fill viewport with appropriate sizing
-   - Get 2D rendering context in JavaScript:
-     ```javascript
-     const canvas = document.getElementById('background-canvas');
-     const ctx = canvas.getContext('2d');
-     ```
-   - Implement window resize handler to maintain full viewport canvas
-   - Create function to draw a basic perspective grid (per architecture.md: lines changing color on mouse hover/proximity)
-   - Set up initial grid parameters (number of lines, spacing, etc.)
-   - Implement clear canvas and grid drawing functionality
-   - *Success Criteria*: Static grid displays properly on canvas at all viewport sizes, and the drawing approach follows clear function patterns per coding standards (Airbnb JavaScript Style Guide)
+### **Epic 5 – Testing & Deployment**
+1.  Cross‑browser matrix (Chrome 115, Safari 17, Firefox 126, Edge 123).
+2.  Lighthouse ≥ 95 perf/acc/best‑practices.
+3.  Host on Netlify/GitHub Pages; CI push → deploy.
+4.  **CI Sanity Check & Lighthouse Gate:** Implement a basic smoke test (e.g., using Playwright or Cypress) in the CI pipeline to:
+    *   Verify the main page loads.
+    *   Click a portfolio card.
+    *   Assert the modal becomes visible.
+    *   Close the modal.
+    *   Assert the modal is hidden.
+    *   Assert no console errors during the run.
+    *   Integrate Lighthouse-CI to run automatically with both `--preset=desktop` and `--preset=mobile`. Fail the build if scores (Perf, Acc, Best Practices) drop below 95 on either preset. Surface scores as a PR comment for visibility.
 
-9. **Implement Mouse Interaction for Canvas**
-   - Add mouse event listeners for tracking position:
-     ```javascript
-     document.addEventListener('mousemove', handleMouseMove);
-     ```
-   - Create mouse position tracking with proper coordinate mapping to canvas
-   - Update grid drawing based on mouse position (lines should change color on proximity)
-   - Implement color transition effect (lines change color on hover/proximity and fade back)
-   - Use requestAnimationFrame for smooth rendering:
-     ```javascript
-     function animate() {
-       // Clear canvas and redraw grid with current mouse position
-       requestAnimationFrame(animate);
-     }
-     ```
-   - Ensure performance optimization for smooth 60+ fps animation
-   - *Success Criteria*: Grid reacts smoothly to mouse movement with color change effects, maintaining 60+ fps, and following the specific interaction pattern described in architecture.md
-
-10. **Implement 3D Perspective Grid (matching screenshot)**
-    - Updated the grid rendering logic in script.js to use a perspective projection, matching the vanishing point and receding lines seen in the provided screenshot.
-    - The grid now appears to recede into the distance, with lines converging toward a vanishing point near the top center of the canvas, closely matching the reference image.
-    - All highlight and dot effects remain functional and are now projected in perspective.
-    - Please visually verify the effect in the browser and provide feedback. If further adjustments to the angle, vanishing point, or density are needed, let me know before marking this task complete.
-
-### Epic 3: Featured Portfolio Element
-11. **Create and Style Portfolio Element**
-    - Create HTML element for the featured project with appropriate markup
-    - Style element with CSS for visual appeal:
-      - Use subtle box-shadow for depth
-      - Apply appropriate sizing and positioning
-      - Create visually distinct appearance using CSS variables
-    - Add hover effects using CSS transitions:
-      ```css
-      .portfolio-element {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-      }
-      .portfolio-element:hover {
-        transform: scale(1.05);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-      }
-      ```
-    - Ensure element is properly positioned in the layout
-    - *Success Criteria*: Portfolio element displays with proper styling and hover effects, following the minimalist aesthetic while being visually distinct
-
-12. **Implement Floating Movement Effect**
-    - Add Motion One library to the project:
-      ```html
-      <script src="https://cdn.jsdelivr.net/npm/motion@10.16.2/dist/motion.min.js"></script>
-      ```
-    - Implement subtle floating/parallax effect based on mouse position:
-      ```javascript
-      // Example pseudocode using Motion One
-      const portfolioElement = document.querySelector('.portfolio-element');
-      document.addEventListener('mousemove', (e) => {
-        // Calculate movement based on mouse position
-        // Apply movement using Motion One
-      });
-      ```
-    - Limit movement range to keep effect subtle
-    - Ensure effect is performant by optimizing calculations and minimizing repaints
-    - Add damping/smoothing to movement for natural feel
-    - *Success Criteria*: Portfolio element moves smoothly in response to mouse position with subtle, natural-feeling parallax effect, maintaining performance standards
-
-### Epic 4: Project Detail Display
-13. **Implement Project Detail Modal**
-    - Create HTML structure for modal overlay:
-      ```html
-      <div class="modal-overlay">
-        <div class="modal-content">
-          <button class="modal-close">×</button>
-          <h2 class="project-title"></h2>
-          <div class="project-description"></div>
-          <img class="project-thumbnail" src="" alt="">
-          <video class="project-video" controls></video>
-        </div>
-      </div>
-      ```
-    - Style modal with CSS:
-      - Full-screen overlay with semi-transparent background
-      - Centered content box with appropriate padding/margins
-      - Styling for title, description, media elements
-      - Animation for appearing/disappearing
-    - Add close button and style appropriately
-    - Initially hide modal using `display: none`
-    - *Success Criteria*: Modal structure exists with proper styling, is hidden by default, and includes all necessary elements for project content (title, description, thumbnail, video) as specified in architecture.md
-
-14. **Connect Portfolio Element to Modal**
-    - Add click event listener to portfolio element:
-      ```javascript
-      document.querySelector('.portfolio-element').addEventListener('click', showProjectDetails);
-      ```
-    - Create function to populate modal with project details from hardcoded data:
-      ```javascript
-      const projectData = {
-        "title": "Project Title",
-        "description": "Project description text goes here...",
-        "thumbnailUrl": "assets/images/project-thumbnail.jpg",
-        "videoUrl": "assets/videos/project-video.mp4"
-      };
-      ```
-    - Implement show/hide functionality for modal
-    - Add event listeners for closing modal (close button, background click, ESC key)
-    - Ensure smooth transitions for showing/hiding
-    - *Success Criteria*: Clicking portfolio element shows modal with complete project details, and modal can be closed via multiple methods (button, background click, ESC key)
-
-### Epic 5: Testing and Deployment
-15. **Cross-browser Testing**
-    - Test in Chrome, Firefox, Safari, and Edge (latest versions)
-    - Verify all functionality works correctly in each browser:
-      - Canvas background renders properly
-      - Interactive elements respond as expected
-      - Modal shows/hides correctly
-      - Styles apply consistently
-    - Document and fix any browser-specific issues
-    - *Success Criteria*: Website functions correctly with consistent user experience in all specified browsers
-
-16. **Performance Optimization**
-    - Audit performance using browser developer tools:
-      - Canvas rendering performance (fps)
-      - Animation smoothness
-      - General page performance
-    - Optimize Canvas rendering if needed (reduce complexity, use requestAnimationFrame efficiently)
-    - Optimize JavaScript event handlers (debounce/throttle if necessary)
-    - Ensure CSS transitions/animations are hardware-accelerated where possible
-    - *Success Criteria*: Interactive elements maintain 60+ fps in all target browsers, no visible performance issues
-
-17. **Deployment**
-    - Select static hosting platform (GitHub Pages, Vercel, or Netlify)
-    - Set up account/project on chosen platform
-    - Configure deployment settings (build commands if needed)
-    - Connect Git repository if using Git-based deployment
-    - Deploy website to production URL
-    - Verify all functionality works in production environment
-    - *Success Criteria*: Website is accessible online at the chosen URL with all functionality working correctly
+---
 
 ## Project Status Board
 
-### Epic 0: Initial Project Set Up and Structure
-- [x] Create Project Directory and Initialize Git Repository
-- [x] Set Up Basic File Structure
-- [x] Set Up Local Development Environment
+| Epic             | Tasks Remaining / Total | % Complete   |
+|------------------|-------------------------|--------------|
+| 0 – Setup        | 0 / 3                   | **100 %**    |
+| 1 – Layout       | 1 / 5                   | **80 %**     |
+| 2 – Grid         | 0 / 9                   | **100 %**    |
+| 3 – Card         | 1 / 2 (Motion bug)      | **50 %**     |
+| 4 – Modal        | 4 / 6                   | **33 %**     |
+| 5 – Test & Deploy| 4 / 4                   | **0 %**      |
 
-### Epic 1: Core Layout & Content
-- [x] Implement Core HTML Layout
-- [x] Apply Basic CSS Styling and Typography
-- [x] Add "About Me" and Contact Content
-- [x] Add interactive sliders for each letter (J, A, C, O, B) to control their X, Y, and Z positions in real time
+*Epic 1: 4 of 5 tasks complete (1 remaining).*
+*Epic 4: 2 of 6 tasks complete (4 remaining).*
+*Epic 5: 0 of 4 tasks complete (4 remaining).*
 
-### Epic 2: Interactive Background Implementation
-- [x] Canvas Setup and Basic Grid Drawing
-- [x] Implement Mouse Interaction for Canvas
-- [x] Implement 3D Perspective Grid (matching screenshot)
-- [x] Introduce cameraOffsetX and cameraOffsetY variables in `script.js`
-- [x] Abstract projection center logic in `project` function
-- [x] Expose CSS variables for camera offsets and update `.landing-title` transform
-- [x] Add "Pan X" and "Pan Y" sliders to control camera offsets
-- [x] Compute and apply initial camera offsets to center letters
-- [x] Verify that panning keeps grid and text aligned
+---
 
-### Epic 3: Featured Portfolio Element
-- [ ] Create and Style Portfolio Element
-- [ ] Implement Floating Movement Effect
+## Timeline & Effort Estimation
+*(Based on 1 developer)*
 
-### Epic 4: Project Detail Display
-- [ ] Implement Project Detail Modal Structure
-- [ ] Connect Portfolio Element to Modal
+| Epic / Task Area             | Estimated Hours | Notes                               |
+|------------------------------|-----------------|-------------------------------------|
+| Finish Motion/parallax bug (Epic 3) | 2–3 hrs         | *Risk: CDN issues could add ~1 hr if self-hosting/pinning is needed.* |
+| Epic 1 Task 5 (Asset Opt.)   | 1-2 hrs         | Image optimization, LCP preload     |
+| Epic 4 Tasks (15–18)         | 6–8 hrs         | Modal 3D, polish, responsiveness    |
+| Cross‑browser sweep (Epic 5) | 2 hrs           |                                     |
+| Lighthouse & perf tweaks (Epic 5) | 2 hrs           | *Risk: INP debugging could add ~1 hr.* |
+| CI + Deploy (Epic 5)         | 1 hr            | Includes smoke test setup           |
+| **Rough Total**              | **13–16 hrs**   |                                     |
+| *Recommended Buffer*         |                 | *Pad to ~2 full dev days for polish*|
 
-### Epic 5: Testing and Deployment
-- [ ] Cross-browser Testing
-- [ ] Performance Optimization
+---
 
+## Lessons Learned
+-   Use `requestAnimationFrame` for Canvas—or jank ensues.
+-   Interpolate RGBA channels independently for smooth colour fades.
+-   Always throttle resize & scroll for heavy transform maths.
+-   Use `contain: paint` (or `content`) sparingly and test thoroughly, as it can sometimes interfere with `position: sticky` elements, particularly on browsers like iOS Safari.
+
+---
 ## Executor's Feedback or Assistance Requests
 
-### Task: Add Camera Panning for Centering Letters and Grid
-- Added camera offset variables (`cameraOffsetX`, `cameraOffsetY`) in the script.js file
-- Modified the projection function to incorporate camera offsets
-- Added CSS variables for camera offsets to the :root
-- Updated the .landing-title transform to use the camera offset variables
-- Added Pan X and Pan Y sliders to control camera offsets
-- Added an Auto-Center button to automatically calculate and apply offsets to center the letters
-- Implemented a function to update CSS variables when offsets change
-- Updated the resizeCanvas function to update CSS variables on window resize
-- Added a global updateCameraOffsetCSSVars function to ensure it's always available
-- The camera panning functionality enables users to center the letters on the screen while maintaining their relative positions to the grid
-- Features are working well, with smooth transitions between different offset values
+### Epic 4: Modal Detail View
 
-### Task: Lock Camera Position and Hide Sliders
-- Per user request, the current camera position has been locked with the current offset values
-- Removed the Pan X and Pan Y sliders from the control panel
-- Removed the Auto-Center button as it's no longer needed
-- Kept the Grid Rotation and Tilt controls to allow those adjustments
-- Renamed the reset button to "Reset Grid Angles" to clarify it only resets the rotation/tilt 
-- Current camera offsets remain applied via CSS variables, ensuring the letters stay in their centered position
-- Control panel is now simpler and focused only on grid angle adjustments
+**Task 15.1: Add `--modal-z` CSS variable (COMPLETED)**
+- Added `--modal-z: 1500px;` to the `:root` selector in `style.css`.
+- Included a comment: `/* Letters are implicitly around 1000px due to perspective, modal needs to be in front */`.
+- This variable will be used to ensure the modal appears in front of other 3D elements like the landing page letters.
 
-### Task: Hide Control Panel Completely
-- Per user's latest request, the entire control panel has been hidden from view
-- Set the control panel div's display property to 'none'
-- All functionality remains intact behind the scenes, just not visible to users
-- The grid and letters remain in their current positions with the previously set camera offsets
-- The code structure is preserved so the panel can be easily re-enabled if needed in the future
-- The result is a clean interface without any control panels or UI elements
+**Task 15.2: `.modal__inner` uses unified transform incl. grid tilt vars (BLOCKED/NEEDS CLARIFICATION)**
+- **Investigation:**
+    - Identified `.modal-content` in `index.html` as the likely equivalent for `.modal__inner`.
+    - Searched `style.css` and `script.js` for "grid tilt vars".
+    - Found `xRotation` and `zRotation` variables in `script.js` that control the canvas grid's tilt. These are updated by JS (sliders in `createRotationControl` exist but are hidden).
+    - These `xRotation` and `zRotation` values are **not currently exposed as CSS variables** in `:root` (unlike `--camera-offset-x` and `--camera-offset-y` which are updated by `updateCameraOffsetCSSVars()`).
+- **Blocker:** Task 15.2 requires the modal to use these "grid tilt vars" in its CSS transform. This is not possible if they are JS-only.
+- **Assistance Request/Suggestion:**
+    To achieve a unified transform for the modal that includes the grid's tilt, we likely need to:
+    1.  Define new CSS variables in `:root`, e.g., `--grid-tilt-x` and `--grid-tilt-z`.
+    2.  Modify `script.js` to update these CSS variables whenever `xRotation` and/or `zRotation` change (similar to `updateCameraOffsetCSSVars()`). This might involve a new function, say `updateGridTiltCSSVars()`, called when the rotation sliders change value (even if the sliders remain hidden, their initial/locked values would propagate).
+    3.  Once these CSS variables are available, `.modal-content` can use them in its `transform` property along with `var(--camera-offset-x)`, `var(--camera-offset-y)`, and `var(--modal-z)`.
 
-### Task: Enhance Grid Highlighting
-- Reimplemented the grid highlighting functionality to be more visually appealing
-- Increased the highlight duration for better visibility (750ms → 1500ms)
-- Reduced color opacity for a softer glow effect (1.0 → 0.7)
-- Implemented randomized highlight generation for more organic visual interest
-- Added occasional neighboring cell highlights for a more expansive effect
-- Introduced size variation and pulsation effects to make highlights more dynamic
-- Added proper fade-in/fade-out with easing functions for smoother transitions
-- Implemented rounded rectangles for a softer, more modern aesthetic
-- Added subtle glow effects using canvas shadows
-- Ensured the highlight trail has a reasonable maximum length (50 items)
-- The result is a more vibrant, dynamic grid highlighting system that responds naturally to mouse movement
+    Alternatively, if the grid tilt is meant to be static for the modal's purposes, please specify the fixed rotation values the modal should use.
 
-## Lessons
-- When implementing canvas animations, use requestAnimationFrame for smooth rendering
-- For color transitions, interpolate RGBA values individually for smoother effects
-- Calculate line distances using vector math for accurate proximity detection
-- Initialize arrays for state management to avoid recreation on each frame
+    Please advise on how to proceed or confirm if new sub-tasks should be created to expose these variables.
 
-### New Subtask for Epic 1: Add interactive sliders for each letter (J, A, C, O, B) to control their X, Y, and Z positions in real time. This will allow the user to visually adjust each letter's position and copy the resulting CSS for production use. Add success criteria: User can adjust each letter's position with sliders and see changes live.
+*(This section will be used by the Executor to log progress, ask questions, and request reviews as tasks are worked on from this new plan.)*
+
+---
+
+> **Next Focus:** Complete Epic 4 tasks 15‑18, then sprint into browser QA to close Epic 5 and ship.
+
+---
+
+## Operational Considerations & Edge Cases
+*   **Canvas Memory (iOS Safari):** For devices with `window.devicePixelRatio > 2` (common on high-DPR iOS displays), consider limiting canvas resolution or complexity for the interactive grid (Epic 2) to prevent exceeding memory limits (which can be around ~256MB on older iOS Safari versions) causing the canvas to go blank.
+*   **Pointer Events (Modal):** When the modal (Epic 4) is active/visible, set `pointer-events: none;` on background elements (like the main canvas or body) that should not be interactive. This prevents accidental interactions (e.g., drag gestures on touch devices) behind the modal.
+*   **INP Testing Technique:** When testing Interaction to Next Paint, specifically for modal open animations, use Chrome DevTools Performance tab with Web Vitals lane enabled. Simulate a ~100ms tap interaction during the modal's opening animation. If INP is high, consider deferring non-critical parts of the modal animation or content rendering using `requestIdleCallback`.

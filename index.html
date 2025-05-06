@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GOLDFINE | Creative Builder</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/motion@10.17.0/dist/motion.min.js"></script>
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -22,14 +23,7 @@
     
     <section class="portfolio-container">
         <div class="portfolio-element">
-            <div class="portfolio-icon">🎨</div>
-            <h3>Featured Project</h3>
-            <div class="portfolio-preview">Click to view details</div>
-            <div class="portfolio-tags">
-                <span class="tag">Web Design</span>
-                <span class="tag">Development</span>
-                <span class="tag">Interactive</span>
-            </div>
+            <img class="portfolio-preview-image" src="assets/images/ideate-static.png" alt="Portfolio preview">
         </div>
     </section>
     
@@ -38,8 +32,17 @@
             <button class="modal-close">×</button>
             <h2 class="project-title"></h2>
             <div class="project-description"></div>
+            <div class="project-tags"></div>
             <img class="project-thumbnail" src="" alt="">
             <video class="project-video" controls></video>
+            <div class="project-features">
+                <h3>Key Features</h3>
+                <ul></ul>
+            </div>
+            <div class="project-technologies">
+                <h3>Technologies Used</h3>
+                <div class="project-tags"></div>
+            </div>
         </div>
     </div>
     

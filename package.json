@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@motionone/dom": "^10.18.0"
+  }
+}
