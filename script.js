@@ -67,6 +67,9 @@ let cameraZ = 1073; // Locked zoom level
 let minZoom = 400;
 let maxZoom = 2000;
 
+// Add theta (grid tilt angle) at top-level scope
+const theta = Math.PI / 4; // 45 degrees
+
 // Portfolio element variables
 let portfolioElement;
 let floatX = 0;
@@ -87,7 +90,7 @@ let isManuallyControlled = true; // Lock the position by default
 
 // Highlight trail state
 const highlightTrail = []; // {x, y, colorIndex, timestamp}
-const highlightFadeDuration = 1000; // ms - Each highlight fades after 1 second
+const highlightFadeDuration = 1750; // ms - Each highlight fades after 1.75 seconds
 const highlightColors = [
   'rgba(0,255,255,0.85)',   // Neon Cyan
   'rgba(255,0,255,0.85)',   // Neon Magenta
@@ -205,8 +208,82 @@ function createRotationControl() {
   controlDiv.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
   controlDiv.style.fontFamily = 'Arial, sans-serif';
   controlDiv.style.fontSize = '14px';
-  controlDiv.style.display = 'none'; // Hide the control panel
-  
+  controlDiv.style.display = 'block'; // Show the control panel
+
+  // Add perspective factor controls
+  const perspectiveLabel = document.createElement('label');
+  perspectiveLabel.textContent = 'Perspective Factor: ';
+  perspectiveLabel.style.display = 'block';
+  perspectiveLabel.style.marginTop = '15px';
+  perspectiveLabel.style.marginBottom = '8px';
+  perspectiveLabel.style.fontWeight = 'bold';
+
+  const baseFactorLabel = document.createElement('label');
+  baseFactorLabel.textContent = 'Base Factor: ';
+  baseFactorLabel.style.display = 'block';
+  baseFactorLabel.style.marginTop = '15px';
+  baseFactorLabel.style.marginBottom = '8px';
+
+  const baseFactorSlider = document.createElement('input');
+  baseFactorSlider.type = 'range';
+  baseFactorSlider.min = '0.1';
+  baseFactorSlider.max = '1.0';
+  baseFactorSlider.step = '0.1';
+  baseFactorSlider.value = '0.5';
+  baseFactorSlider.style.width = '200px';
+  baseFactorSlider.style.height = '20px';
+  baseFactorSlider.style.cursor = 'pointer';
+
+  const baseFactorValue = document.createElement('span');
+  baseFactorValue.textContent = '0.5';
+  baseFactorValue.style.marginLeft = '10px';
+  baseFactorValue.style.fontWeight = 'bold';
+
+  const distanceMultiplierLabel = document.createElement('label');
+  distanceMultiplierLabel.textContent = 'Distance Multiplier: ';
+  distanceMultiplierLabel.style.display = 'block';
+  distanceMultiplierLabel.style.marginTop = '15px';
+  distanceMultiplierLabel.style.marginBottom = '8px';
+
+  const distanceMultiplierSlider = document.createElement('input');
+  distanceMultiplierSlider.type = 'range';
+  distanceMultiplierSlider.min = '0.1';
+  distanceMultiplierSlider.max = '2.0';
+  distanceMultiplierSlider.step = '0.1';
+  distanceMultiplierSlider.value = '0.8';
+  distanceMultiplierSlider.style.width = '200px';
+  distanceMultiplierSlider.style.height = '20px';
+  distanceMultiplierSlider.style.cursor = 'pointer';
+
+  const distanceMultiplierValue = document.createElement('span');
+  distanceMultiplierValue.textContent = '0.8';
+  distanceMultiplierValue.style.marginLeft = '10px';
+  distanceMultiplierValue.style.fontWeight = 'bold';
+
+  // Add event listeners for the new sliders
+  baseFactorSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    baseFactorValue.textContent = value.toFixed(1);
+    window.basePerspectiveFactor = value;
+    console.log('Base Factor updated:', value);
+  });
+
+  distanceMultiplierSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    distanceMultiplierValue.textContent = value.toFixed(1);
+    window.distanceMultiplier = value;
+    console.log('Distance Multiplier updated:', value);
+  });
+
+  // Add the new controls to the control div
+  controlDiv.appendChild(perspectiveLabel);
+  controlDiv.appendChild(baseFactorLabel);
+  controlDiv.appendChild(baseFactorSlider);
+  controlDiv.appendChild(baseFactorValue);
+  controlDiv.appendChild(distanceMultiplierLabel);
+  controlDiv.appendChild(distanceMultiplierSlider);
+  controlDiv.appendChild(distanceMultiplierValue);
+
   // Z-axis rotation control
   const zLabel = document.createElement('label');
   zLabel.textContent = 'Grid Rotation (Z-axis): ';
@@ -391,7 +468,10 @@ function createRotationControl() {
   
   document.body.appendChild(controlDiv);
   
-  console.log('Rotation controls created and added to DOM (hidden)');
+  // Hide the control panel after creation
+  controlDiv.style.display = 'none';
+
+  console.log('Rotation controls created and added to DOM');
   
   // Auto-center the letters once and lock the position
   setTimeout(() => {
@@ -405,6 +485,13 @@ function rotateZ([x, y, z], angle) {
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
   return [x * cos - y * sin, x * sin + y * cos, z];
+}
+
+// Add rotateX function at top-level scope
+function rotateX([x, y, z], angle) {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return [x, y * cos - z * sin, y * sin + z * cos];
 }
 
 // Setup floating effect
@@ -503,27 +590,51 @@ function handleMouseMove(e) {
   mouseX = e.clientX;
   mouseY = e.clientY;
 
-  // Transform mouse coordinates to grid space
+  // --- Map mouse position to grid cell in 3D grid space ---
+  // Inverse project the mouse position to grid coordinates
+  // We'll use a simple iterative search for the closest grid cell
   const margin = 20;
-  const cols = Math.ceil(windowWidth / gridSize) + margin * 2 + 2;
-  const rows = Math.ceil(windowHeight / gridSize) + margin * 2 + 2;
-  const cellX = Math.floor((mouseX - windowWidth / 2) / gridSize + cols / 2);
-  const cellY = Math.floor((mouseY - windowHeight / 2) / gridSize + rows / 2);
-  
-  // Add highlight for current cell - ALWAYS add one
+  const cellSize = gridSize;
+  const cols = Math.ceil(windowWidth / cellSize) + margin * 2 + 2;
+  const rows = Math.ceil(windowHeight / cellSize) + margin * 2 + 2;
+  const gridOrigin = [-(cols/2) * cellSize, -(rows/2) * cellSize, 0];
+  let minDist = Infinity;
+  let bestCell = {x: 0, y: 0};
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      let vx = gridOrigin[0] + i * cellSize;
+      let vy = gridOrigin[1] + j * cellSize;
+      let vz = 0;
+      let [cx, cy, cz] = rotateZ([vx, vy, vz], zRotation);
+      [cx, cy, cz] = rotateX([cx, cy, cz], theta + xRotation);
+      const [sx, sy] = (function project([x, y, z]) {
+        const fov = Math.PI / 4;
+        const aspect = windowWidth / windowHeight;
+        const cameraX = 0;
+        const cameraY = 0;
+        const cz2 = z - cameraZ;
+        const f = 1 / Math.tan(fov / 2);
+        const px = f * (x - cameraX) / aspect / -cz2;
+        const py = f * (y - cameraY) / -cz2;
+        const centerX = windowWidth / 2 + cameraOffsetX;
+        const centerY = windowHeight / 2 + cameraOffsetY;
+        return [centerX + px * windowWidth / 2, centerY + py * windowHeight / 2];
+      })([cx, cy, cz]);
+      const dist = Math.hypot(mouseX - sx, mouseY - sy);
+      if (dist < minDist) {
+        minDist = dist;
+        bestCell = {x: i, y: j};
+      }
+    }
+  }
+  // Add highlight for the best cell
   highlightTrail.push({
-    x: cellX,
-    y: cellY,
+    x: bestCell.x,
+    y: bestCell.y,
     colorIndex: colorCycleIndex,
     timestamp: Date.now(),
-    size: 2.0 // Much larger size for better visibility
+    size: 2.0
   });
-  
-  // Ensure trail doesn't get too long
-  while (highlightTrail.length > 20) {
-    highlightTrail.shift();
-  }
-  
   // Force redraw
   drawGrid();
 }
@@ -538,18 +649,16 @@ function drawGrid() {
 
   // --- 3D Perspective Grid Parameters ---
   const cellSize = gridSize;
-  // Further increase grid size to ensure full coverage and intersection
-  const margin = 20; // extra cells beyond visible area
+  const margin = 20;
   const cols = Math.ceil(windowWidth / cellSize) + margin * 2 + 2;
   const rows = Math.ceil(windowHeight / cellSize) + margin * 2 + 2;
-  const theta = Math.PI / 4; // 60 degrees in radians
+  const theta = Math.PI / 4; // 45 degrees
   const fov = Math.PI / 4; // 45 degrees
   const aspect = windowWidth / windowHeight;
   const near = 0.1;
   const far = 1000;
   const cameraY = 0;
   const cameraX = 0;
-  // Center grid origin so it extends well beyond all edges
   const gridOrigin = [-(cols/2) * cellSize, -(rows/2) * cellSize, 0];
 
   // Perspective projection helper
@@ -564,12 +673,6 @@ function drawGrid() {
     const centerX = windowWidth / 2 + cameraOffsetX;
     const centerY = windowHeight / 2 + cameraOffsetY;
     return [centerX + px * windowWidth / 2, centerY + py * windowHeight / 2];
-  }
-
-  function rotateX([x, y, z], angle) {
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    return [x, y * cos - z * sin, y * sin + z * cos];
   }
 
   // --- Draw grid lines ---
@@ -641,7 +744,7 @@ function drawGrid() {
     if (age <= highlightFadeDuration) validHighlights++;
   }
 
-  // Draw highlights as filled squares that fill the grid cell
+  // Draw highlights
   for (let idx = 0; idx < highlightTrail.length; idx++) {
     const {x, y, colorIndex, timestamp, size = 2.0} = highlightTrail[idx];
     const age = now - timestamp;
@@ -650,16 +753,17 @@ function drawGrid() {
       idx--;
       continue;
     }
-    // Ease-out cubic fade for the whole duration
+    // Linear fade for the whole duration
     const t = Math.min(age / highlightFadeDuration, 1);
-    const fade = 1 - Math.pow(t, 3);
+    const fade = 1 - t;
 
     ctx.save();
     ctx.globalAlpha = fade;
     ctx.fillStyle = highlightColors[colorIndex];
     ctx.strokeStyle = 'white';
     ctx.lineWidth = 2;
-    // Project highlight cell corners
+
+    // Project highlight cell corners in 3D
     let vx = gridOrigin[0] + x * cellSize;
     let vy = gridOrigin[1] + y * cellSize;
     let vz = 0;
@@ -672,9 +776,14 @@ function drawGrid() {
     ].map(corner => {
       let [cx, cy, cz] = rotateZ(corner, zRotation);
       [cx, cy, cz] = rotateX([cx, cy, cz], theta + xRotation);
-      return project([cx, cy, cz]);
+      const projected = project([cx, cy, cz]);
+      // Debug: log projected positions
+      console.log(`Highlight cell (${x},${y}) corner projected to:`, projected);
+      return projected;
     });
-    // Draw filled polygon (square)
+    // Debug: log all corners for this highlight
+    console.log(`Highlight cell (${x},${y}) projected corners:`, corners);
+    // Draw filled polygon (square) in perspective
     ctx.beginPath();
     ctx.moveTo(corners[0][0], corners[0][1]);
     for (let i = 1; i < corners.length; i++) {
