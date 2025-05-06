@@ -227,7 +227,7 @@ header h1 {
   background-color: rgba(255, 255, 255, 0.95);
   padding: 0;
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   max-width: 400px;
   width: 100%;
@@ -245,6 +245,11 @@ header h1 {
   z-index: 4;
   transform-style: preserve-3d;
   transform: translateZ(0);
+}
+
+.portfolio-element:hover {
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3), 0 6px 12px rgba(0, 0, 0, 0.3);
+  transform: translateZ(0) translateY(-5px);
 }
 
 .portfolio-preview-image {
@@ -323,25 +328,58 @@ header h1 {
 .contact-nav {
   position: fixed;
   bottom: var(--spacing-md);
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   justify-content: center;
   gap: var(--spacing-md);
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   background-color: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(5px);
+  border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 
 .contact-nav a {
-  color: var(--text-color);
+  color: #000;
   text-decoration: none;
-  transition: color 0.3s ease;
-  font-size: clamp(0.875rem, 2vw, 1rem);
+  transition: all 0.3s ease;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
 }
 
 .contact-nav a:hover {
-  color: var(--accent-color);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.contact-nav a[href*="github"]:hover {
+  color: #333;
+  background: #fff;
+}
+
+.contact-nav a[href*="twitter"]:hover {
+  color: #1DA1F2;
+  background: #fff;
+}
+
+.contact-nav a[href*="linkedin"]:hover {
+  color: #0077B5;
+  background: #fff;
+}
+
+.contact-nav a[href*="mailto"]:hover {
+  color: #EA4335;
+  background: #fff;
 }
 
 /* Modal Styles */
