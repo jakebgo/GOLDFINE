@@ -45,7 +45,8 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   width: 100vw;
   box-sizing: border-box;
 }
@@ -217,7 +218,6 @@ header h1 {
   width: 100%;
   height: 100%;
   z-index: 3;
-  pointer-events: none;
   perspective: 1000px;
   transform-style: preserve-3d;
 }

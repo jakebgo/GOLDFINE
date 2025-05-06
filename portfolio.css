@@ -1,0 +1,181 @@
+/* portfolio.css */
+
+/* Reset up a simple box model */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.5;
+  color: #fff;
+  background-color: #000;
+  padding-left: 12vw;
+  padding-right: 2vw;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.portfolio-header,
+.portfolio-footer {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.portfolio-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+nav a {
+  text-decoration: none;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.projects-list {
+  display: none;
+}
+
+.project {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.project h2 {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.project a {
+  color: #0066ff;
+  text-decoration: none;
+}
+
+.project a:hover {
+  text-decoration: underline;
+}
+
+.project p {
+  margin-top: 0.5rem;
+  color: #555;
+}
+
+.portfolio-footer p {
+  font-size: 0.875rem;
+  color: #999;
+}
+
+/* Highlighted Ideate section */
+.projects-highlight {
+  background-color: #000;
+  color: #fff;
+  padding: 0;
+  margin-top: 0;
+}
+.highlight-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: auto;
+  gap: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+.project-info {
+  flex: 0 0 100%;
+  text-align: left;
+}
+.project-info h2 a,
+.project-info .project-title {
+  /* removed underline and combined styling */
+}
+.project-info p {
+  font-weight: 300;
+}
+.project-media {
+  flex: 2;
+  text-align: right;
+  margin-top: 5rem;
+  position: relative;
+}
+.project-media img {
+  width: 87%;
+  height: 200px;
+  max-width: none;
+  margin-top: 49px;
+}
+
+/* Footer link style */
+.portfolio-footer {
+  position: fixed;
+  bottom: 1rem;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  margin: 0;
+}
+.portfolio-footer a {
+  color: #fff;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+.portfolio-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Builds and Ideate headings styling */
+.builds-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 3rem;
+}
+
+.ideate-title {
+  font-size: 2rem;
+  font-weight: 300;
+  margin-bottom: 1rem;
+}
+
+.ideate-title a {
+  text-decoration: underline;
+  color: #fff;
+}
+
+/* Controls styling */
+.controls {
+  display: flex;
+  gap: 2rem;
+  margin-top: 2rem;
+  justify-content: center;
+}
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  color: #fff;
+}
+.control-group label {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+.control-group input[type="range"] {
+  width: 150px;
+}
+
+/* Highlight container flex children initial flex */
+.highlight-container > .project-info,
+.highlight-container > .project-media {
+  flex: 1; /* default equal distribution */
+}
+
+/* Center main content with even margins */
+main {
+  max-width: 1400px;
+  margin: 0 auto;
+} 

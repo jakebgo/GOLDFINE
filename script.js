@@ -743,8 +743,8 @@ function setupModalHandlers() {
   const projectTags = document.querySelectorAll('.project-tags');
   const projectFeaturesList = document.querySelector('.project-features ul');
   
-  // Portfolio element click handler
-  if (portfolioElement) {
+  // Portfolio element click handler (skip binding for links)
+  if (portfolioElement && portfolioElement.tagName.toLowerCase() !== 'a') {
     portfolioElement.addEventListener('click', () => {
       if (modalOverlay) {
         // Populate with project data

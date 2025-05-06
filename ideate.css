@@ -1,0 +1,66 @@
+@import url('style.css');
+
+/* Layout for Ideate detail page */
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+  font-family: var(--body-font);
+}
+
+header {
+  max-width: 800px;
+  margin: 0 auto var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav a {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+main {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+section {
+  padding: var(--spacing-md) 0;
+}
+
+section h2 {
+  color: var(--secondary-color);
+  border-bottom: 2px solid var(--accent-color);
+  padding-bottom: var(--spacing-sm);
+}
+
+#overview p {
+  font-size: clamp(1rem, 2vw, 1.125rem);
+}
+
+#features ul,
+#technologies ul {
+  list-style-type: disc;
+  margin-left: var(--spacing-lg);
+}
+
+#media img,
+#media video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: var(--spacing-sm) auto;
+}
+
+footer {
+  max-width: 800px;
+  margin: var(--spacing-lg) auto 0;
+  text-align: center;
+} 
