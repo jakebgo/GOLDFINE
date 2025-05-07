@@ -110,6 +110,9 @@ let dragOffsetX = 0;
 let dragOffsetY = 0;
 let letterPositions = {};
 
+// Touch trail points for mobile interactions
+let touchTrail = [];
+
 // Project data structure
 const projectData = {
   title: "Creative Builder Portfolio",
@@ -187,6 +190,11 @@ function setupCanvas() {
   // Add mouse enter/leave listeners
   canvas.addEventListener('mouseenter', handleMouseEnter);
   canvas.addEventListener('mouseleave', handleMouseLeave);
+  
+  // Touch events for mobile trail
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); touchTrail = []; }, { passive: false });
+  canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+  canvas.addEventListener('touchend', () => { touchTrail = []; });
   
   // Draw initial grid
   drawGrid();
@@ -639,6 +647,18 @@ function handleMouseMove(e) {
   drawGrid();
 }
 
+// Handle touchmove to record finger positions
+function handleTouchMove(e) {
+  e.preventDefault();
+  if (!canvas) return;
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+  const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+  touchTrail.push({ x, y });
+  if (touchTrail.length > 20) touchTrail.shift();
+}
+
 // Draw static grid with cell highlights and trail
 function drawGrid() {
   if (!ctx) {
@@ -825,6 +845,17 @@ function drawGrid() {
       ctx.fill();
     }
   }
+
+  // Draw finger trail points
+  ctx.save();
+  touchTrail.forEach((pt, i) => {
+    const alpha = 1 - (i / touchTrail.length);
+    ctx.fillStyle = `rgba(255,255,255,${alpha * 0.5})`;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 8, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
 }
 
 // Animation loop
