@@ -1,5 +1,11 @@
 {
   "dependencies": {
     "@motionone/dom": "^10.18.0"
+  },
+  "scripts": {
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
   }
 }
